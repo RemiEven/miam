@@ -1,30 +1,52 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"time"
+
+	"github.com/RemiEven/miam/handler"
 
 	"github.com/gorilla/mux"
 )
 
-type product struct {
-	ID int `json:"id"`
-}
-
-func productHandler(responseWriter http.ResponseWriter, request *http.Request) {
-	json.NewEncoder(responseWriter).Encode(product{
-		ID: 1994,
-	})
-}
+const port = 8080
 
 func main() {
-	fmt.Println("Coucou")
+	log.Println("Starting") // FIXME this writes to stderr apparently
 	router := mux.NewRouter()
-	router.HandleFunc("/product/1", productHandler)
-	http.Handle("/", router)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	router.HandleFunc("/product/{id}", handler.ProductHandler)
 
-	fmt.Println("Coucou34")
+	srv := &http.Server{
+		Addr:         ":" + strconv.Itoa(port),
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler:      router,
+	}
+
+	go func() {
+		log.Printf("Will try to listen on port %d", port)
+		if err := srv.ListenAndServe(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+
+	<-c
+
+	var wait = time.Second * 15
+	ctx, cancel := context.WithTimeout(context.Background(), wait)
+	defer cancel()
+
+	srv.Shutdown(ctx)
+
+	log.Println("Shutting down")
+	os.Exit(0)
 }
