@@ -1,3 +1,6 @@
 module github.com/RemiEven/miam
 
-require github.com/gorilla/mux v1.6.2
+require (
+	github.com/gorilla/mux v1.6.2
+	github.com/mattn/go-sqlite3 v1.10.0
+)

@@ -6,7 +6,7 @@
 
 Cross-compile to raspberry pi 0 :
 
-`GOOS=linux GOARCH=arm GOARM=5 go build`
+`CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=5 go build -v`
 
 Then scp eg.
 
@@ -16,3 +16,12 @@ Then scp eg.
 
 `./miam`
 
+# TODO
+
+- health
+- config
+- gestion d'erreur
+- factory
+- version via build and -ldflag
+- cross-compiling dans image
+- docker with bare exec

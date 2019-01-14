@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/RemiEven/miam/dao"
 	"github.com/RemiEven/miam/handler"
 
 	"github.com/gorilla/mux"
@@ -16,10 +17,24 @@ import (
 
 const port = 8080
 
+var (
+	productDao *dao.ProductDao
+)
+
 func main() {
 	log.Println("Starting") // FIXME this writes to stderr apparently
+
+	productDao, err := dao.NewProductDao()
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	defer productDao.Close()
+	handler := handler.NewProductHandler(productDao)
+
 	router := mux.NewRouter()
-	router.HandleFunc("/product/{id}", handler.ProductHandler)
+	router.HandleFunc("/product/{id}", handler.GetProductByID).Methods(http.MethodGet)
+	router.HandleFunc("/product", handler.AddProduct).Methods(http.MethodPost)
 
 	srv := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
@@ -48,5 +63,4 @@ func main() {
 	srv.Shutdown(ctx)
 
 	log.Println("Shutting down")
-	os.Exit(0)
 }
