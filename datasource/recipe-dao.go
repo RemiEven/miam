@@ -9,18 +9,19 @@ import (
 
 // RecipeDao is a recipe dao
 type RecipeDao struct {
-	holder *DatabaseHolder
+	holder              *databaseHolder
+	recipeIngredientDao *RecipeIngredientDao
 }
 
 // NewRecipeDao returns a new recipe dao
-func NewRecipeDao(holder *DatabaseHolder) (*RecipeDao, error) {
+func newRecipeDao(holder *databaseHolder, recipeIngredientDao *RecipeIngredientDao) (*RecipeDao, error) {
 	initStatement := `
 		create table if not exists recipe (name text);
 	`
 	if _, err := holder.db.Exec(initStatement); err != nil {
 		return nil, err
 	}
-	return &RecipeDao{holder}, nil
+	return &RecipeDao{holder, recipeIngredientDao}, nil
 }
 
 // GetRecipe returns the recipe with the given ID or nil

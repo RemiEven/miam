@@ -24,19 +24,14 @@ var (
 func main() {
 	log.Println("Starting") // FIXME this writes to stderr apparently
 
-	databaseHolder, err := datasource.NewDatabaseHolder()
+	datasourceContext, err := datasource.NewContext()
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
-	defer databaseHolder.Close() // TODO this clashes with the os.Exit; get rid of those by extracting a method
+	// defer databaseHolder.Close() // TODO this clashes with the os.Exit; get rid of those by extracting a method
 
-	recipeDao, err := datasource.NewRecipeDao(databaseHolder)
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
-	handler := handler.NewRecipeHandler(recipeDao)
+	handler := handler.NewRecipeHandler(datasourceContext.RecipeDao)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/recipe/{id}", handler.GetRecipeByID).Methods(http.MethodGet)

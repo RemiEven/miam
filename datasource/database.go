@@ -8,22 +8,22 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// DatabaseHolder holds a database connection
-type DatabaseHolder struct {
+// databaseHolder holds a database connection
+type databaseHolder struct {
 	db *sql.DB
 }
 
-// NewDatabaseHolder returns a new database holder
-func NewDatabaseHolder() (*DatabaseHolder, error) {
+// newDatabaseHolder returns a new database holder
+func newDatabaseHolder() (*databaseHolder, error) {
 	db, err := sql.Open("sqlite3", "./miam.db")
 	if err != nil {
 		return nil, err
 	}
-	return &DatabaseHolder{db}, nil
+	return &databaseHolder{db}, nil
 }
 
 // Close closes the connection to the database
-func (holder *DatabaseHolder) Close() error {
+func (holder *databaseHolder) Close() error {
 	log.Println("Closing database connection")
 	return holder.db.Close()
 }
