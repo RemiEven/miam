@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/RemiEven/miam/dao"
+	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/handler"
 
 	"github.com/gorilla/mux"
@@ -18,23 +18,29 @@ import (
 const port = 8080
 
 var (
-	productDao *dao.ProductDao
+	recipeDao *datasource.RecipeDao
 )
 
 func main() {
 	log.Println("Starting") // FIXME this writes to stderr apparently
 
-	productDao, err := dao.NewProductDao()
+	databaseHolder, err := datasource.NewDatabaseHolder()
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
-	defer productDao.Close()
-	handler := handler.NewProductHandler(productDao)
+	defer databaseHolder.Close() // TODO this clashes with the os.Exit; get rid of those by extracting a method
+
+	recipeDao, err := datasource.NewRecipeDao(databaseHolder)
+	if err != nil {
+		log.Println(err)
+		os.Exit(1)
+	}
+	handler := handler.NewRecipeHandler(recipeDao)
 
 	router := mux.NewRouter()
-	router.HandleFunc("/product/{id}", handler.GetProductByID).Methods(http.MethodGet)
-	router.HandleFunc("/product", handler.AddProduct).Methods(http.MethodPost)
+	router.HandleFunc("/recipe/{id}", handler.GetRecipeByID).Methods(http.MethodGet)
+	router.HandleFunc("/recipe", handler.AddRecipe).Methods(http.MethodPost)
 
 	srv := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
@@ -57,10 +63,10 @@ func main() {
 	<-c
 
 	var wait = time.Second * 15
-	ctx, cancel := context.WithTimeout(context.Background(), wait)
+	context, cancel := context.WithTimeout(context.Background(), wait)
 	defer cancel()
 
-	srv.Shutdown(ctx)
+	srv.Shutdown(context)
 
 	log.Println("Shutting down")
 }

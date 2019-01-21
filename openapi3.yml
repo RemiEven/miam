@@ -1,0 +1,186 @@
+openapi: 3.0.0
+servers: []
+info:
+  description: >-
+    Description
+    
+  version: 1.0.0
+  title: Miam api
+tags: []
+paths:
+  '/recipe':
+    post:
+      summary: ''
+      description: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditableRecipe'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/Error'
+  '/recipe/{id}':
+    get:
+      summary: ''
+      description: ''
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/Error'
+    put:
+      summary: ''
+      description: ''
+      parameters: 
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditableRecipe'
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: ''
+      description: ''
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No content
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  '/recipe/search':
+    post:
+      summary: ''
+      description: ''
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecipeSearch'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeSearchResult'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/Error'
+          
+components:
+  schemas:
+    Recipe:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        howTo:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredient'
+    RecipeIngredient:
+      type: object
+      properties:
+        ingredientId:
+          type: string
+        quantity:
+          type: string
+        name:
+          type: string
+    RecipeSearch:
+      type: object
+      properties:
+        searchTerm:
+          type: string
+        excludedRecipes:
+          type: array
+          items:
+            type: string
+        excludedIngredients:
+          type: array
+          items:
+            type: string
+    RecipeSearchResult:
+      type: object
+      properties:
+        total:
+          type: integer
+        firstResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recipe'
+    EditableRecipe:
+      type: object
+      properties:
+        name:
+          type: string
+        howTo:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredient'
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+security: []
