@@ -16,7 +16,7 @@ type RecipeDao struct {
 // NewRecipeDao returns a new recipe dao
 func newRecipeDao(holder *databaseHolder, recipeIngredientDao *RecipeIngredientDao) (*RecipeDao, error) {
 	initStatement := `
-		create table if not exists recipe (name text);
+		create table if not exists recipe (name text, how_to text);
 	`
 	if _, err := holder.db.Exec(initStatement); err != nil {
 		return nil, err
@@ -26,22 +26,29 @@ func newRecipeDao(holder *databaseHolder, recipeIngredientDao *RecipeIngredientD
 
 // GetRecipe returns the recipe with the given ID or nil
 func (dao *RecipeDao) GetRecipe(ID int) (*model.Recipe, error) {
-	rows, err := dao.holder.db.Query("select oid, name from recipe where oid=?", ID)
+	rows, err := dao.holder.db.Query("select oid, name, how_to from recipe where oid=?", ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	if rows.Next() {
 		var oid int
-		var name string
-		if err = rows.Scan(&oid, &name); err != nil {
+		var name, howTo string
+		if err = rows.Scan(&oid, &name, &howTo); err != nil {
 			return nil, err
 		}
 		strID := strconv.Itoa(oid)
+		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ID)
+		if err != nil {
+			return nil, err
+		}
+
 		return &model.Recipe{
 			ID: strID,
 			BaseRecipe: model.BaseRecipe{
-				Name: name,
+				Name:        name,
+				HowTo:       howTo,
+				Ingredients: ingredients,
 			},
 		}, nil
 	} else if err := rows.Err(); err != nil {
@@ -56,20 +63,31 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	insertStatement, err := transaction.Prepare("insert into recipe(name) values (?)")
+	insertStatement, err := transaction.Prepare("insert into recipe(name, how_to) values (?, ?)")
 	if err != nil {
 		return "", err
 	}
 	defer insertStatement.Close()
 
-	result, err := insertStatement.Exec(recipe.Name)
+	result, err := insertStatement.Exec(recipe.Name, recipe.HowTo)
 	if err != nil {
+		transaction.Rollback() // TODO: log if fail to rollback
 		return "", err
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
+		transaction.Rollback() // TODO: log if fail to rollback
 		return "", err
 	}
+	recipeID := strconv.Itoa(int(id))
+
+	for _, recipeIngredient := range recipe.Ingredients {
+		_, err = dao.recipeIngredientDao.AddRecipeIngredient(transaction, recipeID, recipeIngredient)
+		if err != nil {
+			transaction.Rollback() // TODO: log if fail to rollback
+		}
+	}
+
 	transaction.Commit()
-	return strconv.Itoa(int(id)), nil
+	return recipeID, nil
 }

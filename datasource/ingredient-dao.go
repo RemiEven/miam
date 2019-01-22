@@ -1,6 +1,7 @@
 package datasource
 
 import (
+	"database/sql"
 	"fmt"
 	"strconv"
 
@@ -44,4 +45,23 @@ func (dao *IngredientDao) GetIngredient(ID int) (*model.Ingredient, error) {
 		return nil, err
 	}
 	return nil, fmt.Errorf("No ingredient found with id [%d]", ID)
+}
+
+func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (string, error) {
+	insertStatement, err := transaction.Prepare("insert into ingredient(name) values(?)")
+	if err != nil {
+		return "", err
+	}
+	defer insertStatement.Close()
+
+	result, err := insertStatement.Exec(name)
+	if err != nil {
+		return "", err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return "", err
+	}
+
+	return strconv.Itoa(int(id)), nil
 }

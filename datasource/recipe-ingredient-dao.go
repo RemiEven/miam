@@ -1,6 +1,7 @@
 package datasource
 
 import (
+	"database/sql"
 	"strconv"
 
 	"github.com/RemiEven/miam/model"
@@ -14,7 +15,7 @@ type RecipeIngredientDao struct {
 // NewRecipeIngredientDao returns a new recipe ingredient dao
 func newRecipeIngredientDao(holder *databaseHolder, ingredientDao *IngredientDao) (*RecipeIngredientDao, error) {
 	initStatement := `
-		create table if not exists recipe_ingredient (recipe_id text, ingredient_id text, quantity text)
+		create table if not exists recipe_ingredient (recipe_id int, ingredient_id int, quantity text)
 	`
 	if _, err := holder.db.Exec(initStatement); err != nil {
 		return nil, err
@@ -33,7 +34,7 @@ func (dao *RecipeIngredientDao) GetRecipeIngredients(recipeID int) ([]model.Reci
 		return nil, err
 	}
 	defer rows.Close()
-	recipeIngredients := make([]model.RecipeIngredient, 8) // most recipes have 8 or less ingredients
+	recipeIngredients := make([]model.RecipeIngredient, 0, 8) // most recipes have 8 or less ingredients
 	for rows.Next() {
 		var ingredientID int
 		var quantity string
@@ -55,4 +56,35 @@ func (dao *RecipeIngredientDao) GetRecipeIngredients(recipeID int) ([]model.Reci
 		return nil, err
 	}
 	return recipeIngredients, nil
+}
+
+func (dao *RecipeIngredientDao) AddRecipeIngredient(transaction *sql.Tx, recipeID string, recipeIngredient model.RecipeIngredient) (string, error) {
+	if len(recipeIngredient.ID) == 0 {
+		// New ingredient
+		ingredientID, err := dao.ingredientDao.AddIngredient(transaction, recipeIngredient.Name)
+		if err != nil {
+			return "", err
+		}
+		recipeIngredient.ID = ingredientID
+	}
+	intRecipeID, err := strconv.Atoi(recipeID)
+	if err != nil {
+		return "", err
+	}
+	intIngredientID, err := strconv.Atoi(recipeIngredient.ID)
+	if err != nil {
+		return "", err
+	}
+
+	insertStatement, err := transaction.Prepare("insert into recipe_ingredient(recipe_id, ingredient_id, quantity) values(?, ?, ?)")
+	if err != nil {
+		return "", err
+	}
+	defer insertStatement.Close()
+
+	_, err = insertStatement.Exec(intRecipeID, intIngredientID, recipeIngredient.Quantity)
+	if err != nil {
+		return "", err
+	}
+	return recipeIngredient.ID, nil
 }

@@ -2,7 +2,7 @@ package model
 
 type Ingredient struct {
 	BaseIngredient `json:""`
-	ID             string
+	ID             string `json:"id"`
 }
 
 type BaseIngredient struct {
