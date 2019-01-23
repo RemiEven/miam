@@ -1,17 +1,19 @@
 openapi: 3.0.0
 servers: []
 info:
-  description: >-
-    Description
-    
-  version: 1.0.0
   title: Miam api
+  version: 0.0.1
+  description: >-
+    Miam api is a restful api allowing a client to manage a set of recipes which contains ingredients.
+
 tags: []
 paths:
   '/recipe':
     post:
-      summary: ''
-      description: ''
+      tags:
+        - 'Recipe'
+      summary: 'Create a new recipe'
+      description: 'Create a new recipe. Provided ingredients can either be pre-existing, in which case they must provide an ingredientId, or new, in which case they must provide a name. Quantity is always optional.'
       requestBody:
         content:
           application/json:
@@ -28,8 +30,9 @@ paths:
                $ref: '#/components/schemas/Error'
   '/recipe/{id}':
     get:
-      summary: ''
-      description: ''
+      tags:
+        - 'Recipe'
+      summary: 'Get a recipe by its id'
       parameters:
         - name: id
           in: path
@@ -50,9 +53,11 @@ paths:
               schema:
                $ref: '#/components/schemas/Error'
     put:
-      summary: ''
-      description: ''
-      parameters: 
+      tags:
+        - 'Recipe'
+      summary: 'Update a recipe'
+      description: 'Update a recipe. Provided ingredients can either be pre-existing, in which case they must provude an ingredientId, or new, in which case they must provide a name. Quantity is always optional.'
+      parameters:
         - name: id
           in: path
           required: true
@@ -79,8 +84,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
     delete:
-      summary: ''
-      description: ''
+      tags:
+        - 'Recipe'
+      summary: 'Delete a recipe'
+      description: 'Delete a recipe, leaving potentially "orphaned" ingredient as-is.'
       parameters:
         - name: id
           in: path
@@ -98,8 +105,10 @@ paths:
                 $ref: '#/components/schemas/Error'
   '/recipe/search':
     post:
-      summary: ''
-      description: ''
+      tags:
+        - 'Recipe'
+      summary: 'Search for recipes'
+      description: 'Search for recipes matching given search criteria, returning matches count and first few matches. Every criterion is optional; if none is provided, a random selection of recipes will be returned. `searchTerm` will be used to fuzzy-match in recipe/ingredient names. `excludedRecipes` and `excludedIngredients` are used to filter out recipes or ingredients based on their ids.'
       requestBody:
         content:
           application/json:
@@ -118,7 +127,77 @@ paths:
             application/json:
               schema:
                $ref: '#/components/schemas/Error'
-          
+  '/ingredient':
+    get:
+      tags:
+        - 'Ingredient'
+      summary: 'List all ingredients'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ingredient'
+  '/ingredient/{id}':
+    delete:
+      tags:
+        - 'Ingredient'
+      summary: 'Delete an ingredient if no recipe uses it'
+      description: ''
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      tags:
+        - 'Ingredient'
+      summary: 'Update an ingredient'
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditableIngredient'
+      responses:
+        '204':
+          description: No content
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+               $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Recipe:
@@ -141,6 +220,18 @@ components:
           type: string
         quantity:
           type: string
+        name:
+          type: string
+    Ingredient:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    EditableIngredient:
+      type: object
+      properties:
         name:
           type: string
     RecipeSearch:
