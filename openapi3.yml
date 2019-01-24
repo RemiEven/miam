@@ -46,12 +46,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Recipe'
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-               $ref: '#/components/schemas/Error'
     put:
       tags:
         - 'Recipe'
@@ -97,12 +91,6 @@ paths:
       responses:
         '204':
           description: No content
-        '404':
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
   '/recipe/search':
     post:
       tags:

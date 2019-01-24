@@ -11,7 +11,6 @@ import (
 
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/handler"
-
 	"github.com/gorilla/mux"
 )
 
@@ -29,7 +28,7 @@ func main() {
 		log.Println(err)
 		os.Exit(1)
 	}
-	// defer databaseHolder.Close() // TODO this clashes with the os.Exit; get rid of those by extracting a method
+	// defer datasourceContext.Close() // TODO this clashes with the os.Exit; get rid of those by extracting a method
 
 	handler := handler.NewRecipeHandler(datasourceContext.RecipeDao)
 

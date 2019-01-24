@@ -32,3 +32,8 @@ func NewContext() (*Context, error) {
 		recipeDao,
 	}, nil
 }
+
+// Close cleanly closes the context by releasing any resources it might have
+func (context *Context) Close() error {
+	return context.holder.Close()
+}

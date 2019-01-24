@@ -88,6 +88,28 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 		}
 	}
 
-	transaction.Commit()
-	return recipeID, nil
+	return recipeID, transaction.Commit()
+}
+
+func (dao *RecipeDao) DeleteRecipe(ID int) error {
+	transaction, err := dao.holder.db.Begin()
+	if err != nil {
+		return err
+	}
+	deleteStatement, err := transaction.Prepare("delete from recipe where oid=?")
+	if err != nil {
+		return err
+	}
+	defer deleteStatement.Close()
+
+	if _, err := deleteStatement.Exec(ID); err != nil {
+		transaction.Rollback() // TODO: log if fail to rollback
+		return err
+	}
+	if err = dao.recipeIngredientDao.DeleteRecipeIngredients(transaction, ID); err != nil {
+		transaction.Rollback() // TODO: log if fail to rollback
+		return err
+	}
+
+	return transaction.Commit()
 }

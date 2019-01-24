@@ -65,3 +65,16 @@ func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (strin
 
 	return strconv.Itoa(int(id)), nil
 }
+
+// DeleteIngredient deletes the ingredient with the given id if present.
+// It is up to the caller to ensure no recipe uses the ingredient.
+func (dao *IngredientDao) DeleteIngredient(ID int) error {
+	deleteStatement, err := dao.holder.db.Prepare("delete from ingredient where oid=?")
+	if err != nil {
+		return err
+	}
+	defer deleteStatement.Close()
+
+	_, err = deleteStatement.Exec(ID)
+	return err
+}

@@ -1,6 +1,6 @@
 package model
 
-// Recipe is a recipe with id/name
+// Recipe is a recipe with id, name, howto and ingredients
 type Recipe struct {
 	BaseRecipe `json:""`
 	ID         string `json:"id"`

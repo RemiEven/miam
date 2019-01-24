@@ -2,6 +2,7 @@ package datasource
 
 import (
 	"database/sql"
+	"fmt"
 	"strconv"
 
 	"github.com/RemiEven/miam/model"
@@ -15,7 +16,9 @@ type RecipeIngredientDao struct {
 // NewRecipeIngredientDao returns a new recipe ingredient dao
 func newRecipeIngredientDao(holder *databaseHolder, ingredientDao *IngredientDao) (*RecipeIngredientDao, error) {
 	initStatement := `
-		create table if not exists recipe_ingredient (recipe_id int, ingredient_id int, quantity text)
+		create table if not exists recipe_ingredient (recipe_id int, ingredient_id int, quantity text);
+		create index if not exists recipe_id_index on recipe_ingredient(recipe_id);
+		create index if not exists ingredient_id_index on recipe_ingredient(ingredient_id);
 	`
 	if _, err := holder.db.Exec(initStatement); err != nil {
 		return nil, err
@@ -87,4 +90,33 @@ func (dao *RecipeIngredientDao) AddRecipeIngredient(transaction *sql.Tx, recipeI
 		return "", err
 	}
 	return recipeIngredient.ID, nil
+}
+
+func (dao *RecipeIngredientDao) IsUsedInRecipe(ingredientID int) (bool, error) {
+	rows, err := dao.holder.db.Query("select exists(select 1 from recipe_ingredient where ingredient_id=?)", ingredientID)
+	if err != nil {
+		return false, nil
+	}
+	defer rows.Close()
+	if rows.Next() {
+		var exists bool
+		if err := rows.Scan(&exists); err != nil {
+			return false, err
+		}
+		return exists, nil
+	} else if err := rows.Err(); err != nil {
+		return false, err
+	}
+	return false, fmt.Errorf("Fail to query for recipes using ingredient [%q]", ingredientID)
+}
+
+func (dao *RecipeIngredientDao) DeleteRecipeIngredients(transaction *sql.Tx, recipeID int) error {
+	deleteStatement, err := transaction.Prepare("delete from recipe_ingredient where recipe_id=?")
+	if err != nil {
+		return err
+	}
+	defer deleteStatement.Close()
+
+	_, err = deleteStatement.Exec(recipeID)
+	return err
 }

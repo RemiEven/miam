@@ -21,8 +21,8 @@ Then scp eg.
 - health
 - config
 - gestion d'erreur
-- factory
 - version via build and -ldflag
 - cross-compiling dans image
 - docker with bare exec
 - hook quand stop de process pour fermer connexion bdd, serveur http, ...
+- ingredient routes
