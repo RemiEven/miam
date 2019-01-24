@@ -34,7 +34,7 @@ func (handler *RecipeHandler) GetRecipeByID(responseWriter http.ResponseWriter, 
 		return
 	}
 	recipe, err := handler.recipeDao.GetRecipe(id)
-	if err != nil {
+	if err != nil { // TODO: handle errNotFound differently
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 	} else {

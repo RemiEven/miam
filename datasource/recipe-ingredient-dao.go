@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/RemiEven/miam/common"
+
 	"github.com/RemiEven/miam/model"
 )
 
@@ -119,4 +121,36 @@ func (dao *RecipeIngredientDao) DeleteRecipeIngredients(transaction *sql.Tx, rec
 
 	_, err = deleteStatement.Exec(recipeID)
 	return err
+}
+
+func (dao *RecipeIngredientDao) DeleteRecipeIngredient(transaction *sql.Tx, recipeID, ingredientID int) error {
+	deleteStatement, err := transaction.Prepare("delete from recipe_ingredient where recipe_id=? and ingredient_id=?")
+	if err != nil {
+		return err
+	}
+	defer deleteStatement.Close()
+
+	_, err = deleteStatement.Exec(recipeID, ingredientID)
+	return err
+}
+
+func (dao *RecipeIngredientDao) UpdateRecipeIngredient(transaction *sql.Tx, recipeID int, recipeIngredient model.RecipeIngredient) error {
+	updateStatement, err := transaction.Prepare("update recipe_ingredient set quantity=$3 where recipe_id=$1 and ingredient_id=$2")
+	if err != nil {
+		return err
+	}
+	defer updateStatement.Close()
+
+	result, err := updateStatement.Exec(recipeID, recipeIngredient.ID, recipeIngredient.Quantity)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	switch {
+	case err != nil:
+		return err
+	case rowsAffected == 0:
+		return common.ErrNotFound
+	}
+	return nil
 }

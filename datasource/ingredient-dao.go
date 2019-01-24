@@ -2,9 +2,9 @@ package datasource
 
 import (
 	"database/sql"
-	"fmt"
 	"strconv"
 
+	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/model"
 )
 
@@ -44,7 +44,7 @@ func (dao *IngredientDao) GetIngredient(ID int) (*model.Ingredient, error) {
 	} else if err := rows.Err(); err != nil {
 		return nil, err
 	}
-	return nil, fmt.Errorf("No ingredient found with id [%d]", ID)
+	return nil, common.ErrNotFound
 }
 
 func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (string, error) {
@@ -66,7 +66,7 @@ func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (strin
 	return strconv.Itoa(int(id)), nil
 }
 
-// DeleteIngredient deletes the ingredient with the given id if present.
+// DeleteIngredient delete the ingredient with the given id if present.
 // It is up to the caller to ensure no recipe uses the ingredient.
 func (dao *IngredientDao) DeleteIngredient(ID int) error {
 	deleteStatement, err := dao.holder.db.Prepare("delete from ingredient where oid=?")
@@ -77,4 +77,25 @@ func (dao *IngredientDao) DeleteIngredient(ID int) error {
 
 	_, err = deleteStatement.Exec(ID)
 	return err
+}
+
+func (dao *IngredientDao) UpdateIngredient(ingredient model.Ingredient) error {
+	updateStatement, err := dao.holder.db.Prepare("update ingredient set name=$2 where oid=$1")
+	if err != nil {
+		return err
+	}
+	defer updateStatement.Close()
+
+	result, err := updateStatement.Exec(ingredient.ID, ingredient.Name)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	switch {
+	case err != nil:
+		return err
+	case rowsAffected == 0:
+		return common.ErrNotFound
+	}
+	return nil
 }

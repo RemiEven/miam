@@ -50,7 +50,7 @@ paths:
       tags:
         - 'Recipe'
       summary: 'Update a recipe'
-      description: 'Update a recipe. Provided ingredients can either be pre-existing, in which case they must provude an ingredientId, or new, in which case they must provide a name. Quantity is always optional.'
+      description: 'Update a recipe. Provided ingredients can either be pre-existing, in which case they must provide an ingredientId, or new, in which case they must provide a name. Quantity is always optional.'
       parameters:
         - name: id
           in: path
@@ -63,8 +63,12 @@ paths:
             schema:
               $ref: '#/components/schemas/EditableRecipe'
       responses:
-        '204':
-          description: No content
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
         '400':
           description: Bad request
           content:
@@ -172,8 +176,12 @@ paths:
             schema:
               $ref: '#/components/schemas/EditableIngredient'
       responses:
-        '204':
-          description: No content
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
         '400':
           description: Bad request
           content:

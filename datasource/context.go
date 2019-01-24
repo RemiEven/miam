@@ -12,7 +12,6 @@ func NewContext() (*Context, error) {
 	if err != nil {
 		return nil, err
 	}
-	// TODO also register process end hook to stop connection to db
 	ingredientDao, err := newIngredientDao(holder)
 	if err != nil {
 		return nil, err
