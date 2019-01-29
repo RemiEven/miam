@@ -41,6 +41,7 @@ func main() {
 	router.HandleFunc("/ingredient/", ingredientHandler.GetIngredients).Methods(http.MethodGet)
 	router.HandleFunc("/ingredient/{id}", ingredientHandler.UpdateIngredient).Methods(http.MethodPut)
 	router.HandleFunc("/ingredient/{id}", ingredientHandler.DeleteIngredient).Methods(http.MethodDelete)
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/")))) // FIXME: this is not suitable for SPA as is
 
 	srv := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
