@@ -30,11 +30,17 @@ func main() {
 	}
 	// defer datasourceContext.Close() // TODO this clashes with the os.Exit; get rid of those by extracting a method
 
-	handler := handler.NewRecipeHandler(datasourceContext.RecipeDao)
+	recipeHandler := handler.NewRecipeHandler(datasourceContext.RecipeDao)
+	ingredientHandler := handler.NewIngredientHandler(datasourceContext.IngredientDao)
 
 	router := mux.NewRouter()
-	router.HandleFunc("/recipe/{id}", handler.GetRecipeByID).Methods(http.MethodGet)
-	router.HandleFunc("/recipe", handler.AddRecipe).Methods(http.MethodPost)
+	router.HandleFunc("/recipe", recipeHandler.AddRecipe).Methods(http.MethodPost)
+	router.HandleFunc("/recipe/{id}", recipeHandler.GetRecipeByID).Methods(http.MethodGet)
+	router.HandleFunc("/recipe/{id}", recipeHandler.UpdateRecipe).Methods(http.MethodPut)
+	router.HandleFunc("/recipe/{id}", recipeHandler.DeleteRecipe).Methods(http.MethodDelete)
+	router.HandleFunc("/ingredient/", ingredientHandler.GetIngredients).Methods(http.MethodGet)
+	router.HandleFunc("/ingredient/{id}", ingredientHandler.UpdateIngredient).Methods(http.MethodPut)
+	router.HandleFunc("/ingredient/{id}", ingredientHandler.DeleteIngredient).Methods(http.MethodDelete)
 
 	srv := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),

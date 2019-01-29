@@ -33,7 +33,7 @@ func (dao *RecipeIngredientDao) GetRecipeIngredients(recipeID int) ([]model.Reci
 		recipe_ingredient.ingredient_id, recipe_ingredient.quantity, ingredient.name
 		from recipe_ingredient
 		inner join ingredient
-		on recipe_ingredient.ingredient_id=ingredient.oid
+		on recipe_ingredient.ingredient_id=ingredient.id
 		where recipe_ingredient.recipe_id=?`, recipeID)
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (dao *RecipeIngredientDao) DeleteRecipeIngredient(transaction *sql.Tx, reci
 }
 
 func (dao *RecipeIngredientDao) UpdateRecipeIngredient(transaction *sql.Tx, recipeID int, recipeIngredient model.RecipeIngredient) error {
-	updateStatement, err := transaction.Prepare("update recipe_ingredient set quantity=$3 where recipe_id=$1 and ingredient_id=$2")
+	updateStatement, err := transaction.Prepare("update recipe_ingredient set quantity=?3 where recipe_id=?1 and ingredient_id=?2")
 	if err != nil {
 		return err
 	}

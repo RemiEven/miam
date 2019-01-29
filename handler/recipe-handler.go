@@ -61,3 +61,41 @@ func (handler *RecipeHandler) AddRecipe(responseWriter http.ResponseWriter, requ
 		responseWriter.WriteHeader(http.StatusCreated)
 	}
 }
+
+// UpdateRecipe updates a recipe
+func (handler *RecipeHandler) UpdateRecipe(responseWriter http.ResponseWriter, request *http.Request) {
+	var recipe model.BaseRecipe
+	defer request.Body.Close()
+	err := json.NewDecoder(request.Body).Decode(&recipe)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	updated, err := handler.recipeDao.UpdateRecipe(model.Recipe{
+		ID:         mux.Vars(request)["id"],
+		BaseRecipe: recipe,
+	})
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+	} else {
+		json.NewEncoder(responseWriter).Encode(updated)
+	}
+}
+
+func (handler *RecipeHandler) DeleteRecipe(responseWriter http.ResponseWriter, request *http.Request) {
+	vars := mux.Vars(request)
+	id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if err = handler.recipeDao.DeleteRecipe(id); err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+	} else {
+		responseWriter.WriteHeader(http.StatusNoContent)
+	}
+}

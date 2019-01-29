@@ -14,7 +14,7 @@ type IngredientDao struct {
 
 func newIngredientDao(holder *databaseHolder) (*IngredientDao, error) {
 	initStatement := `
-		create table if not exists ingredient (name text)
+		create table if not exists ingredient (id integer primary key asc, name text)
 	`
 	if _, err := holder.db.Exec(initStatement); err != nil {
 		return nil, err
@@ -24,19 +24,19 @@ func newIngredientDao(holder *databaseHolder) (*IngredientDao, error) {
 
 // GetIngredient returns the ingredient with the given ID or nil
 func (dao *IngredientDao) GetIngredient(ID int) (*model.Ingredient, error) {
-	rows, err := dao.holder.db.Query("select oid, name from ingredient where oid=?", ID)
+	rows, err := dao.holder.db.Query("select id, name from ingredient where id=?", ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	if rows.Next() {
-		var oid int
+		var id int
 		var name string
-		if err := rows.Scan(&oid, &name); err != nil {
+		if err := rows.Scan(&id, &name); err != nil {
 			return nil, err
 		}
 		return &model.Ingredient{
-			ID: strconv.Itoa(oid),
+			ID: strconv.Itoa(id),
 			BaseIngredient: model.BaseIngredient{
 				Name: name,
 			},
@@ -69,7 +69,7 @@ func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (strin
 // DeleteIngredient delete the ingredient with the given id if present.
 // It is up to the caller to ensure no recipe uses the ingredient.
 func (dao *IngredientDao) DeleteIngredient(ID int) error {
-	deleteStatement, err := dao.holder.db.Prepare("delete from ingredient where oid=?")
+	deleteStatement, err := dao.holder.db.Prepare("delete from ingredient where id=?")
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (dao *IngredientDao) DeleteIngredient(ID int) error {
 }
 
 func (dao *IngredientDao) UpdateIngredient(ingredient model.Ingredient) error {
-	updateStatement, err := dao.holder.db.Prepare("update ingredient set name=$2 where oid=$1")
+	updateStatement, err := dao.holder.db.Prepare("update ingredient set name=?2 where id=?1")
 	if err != nil {
 		return err
 	}
@@ -98,4 +98,31 @@ func (dao *IngredientDao) UpdateIngredient(ingredient model.Ingredient) error {
 		return common.ErrNotFound
 	}
 	return nil
+}
+
+func (dao *IngredientDao) GetAllIngredients() ([]model.Ingredient, error) {
+	rows, err := dao.holder.db.Query("select id, name from ingredient")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	ingredients := make([]model.Ingredient, 0, 50) // 50 is arbitrary
+
+	for rows.Next() {
+		var id int
+		var name string
+		if err := rows.Scan(&id, &name); err != nil {
+			return nil, err
+		}
+		ingredients = append(ingredients, model.Ingredient{
+			ID: strconv.Itoa(id),
+			BaseIngredient: model.BaseIngredient{
+				Name: name,
+			},
+		})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return ingredients, nil
 }

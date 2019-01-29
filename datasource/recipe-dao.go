@@ -16,7 +16,7 @@ type RecipeDao struct {
 // NewRecipeDao returns a new recipe dao
 func newRecipeDao(holder *databaseHolder, recipeIngredientDao *RecipeIngredientDao) (*RecipeDao, error) {
 	initStatement := `
-		create table if not exists recipe (name text, how_to text);
+		create table if not exists recipe (id integer primary key asc, name text, how_to text);
 	`
 	if _, err := holder.db.Exec(initStatement); err != nil {
 		return nil, err
@@ -26,18 +26,18 @@ func newRecipeDao(holder *databaseHolder, recipeIngredientDao *RecipeIngredientD
 
 // GetRecipe returns the recipe with the given ID or nil
 func (dao *RecipeDao) GetRecipe(ID int) (*model.Recipe, error) {
-	rows, err := dao.holder.db.Query("select oid, name, how_to from recipe where oid=?", ID)
+	rows, err := dao.holder.db.Query("select id, name, how_to from recipe where id=?", ID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	if rows.Next() {
-		var oid int
+		var id int
 		var name, howTo string
-		if err = rows.Scan(&oid, &name, &howTo); err != nil {
+		if err = rows.Scan(&id, &name, &howTo); err != nil {
 			return nil, err
 		}
-		strID := strconv.Itoa(oid)
+		strID := strconv.Itoa(id)
 		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ID)
 		if err != nil {
 			return nil, err
@@ -96,7 +96,7 @@ func (dao *RecipeDao) DeleteRecipe(ID int) error {
 	if err != nil {
 		return err
 	}
-	deleteStatement, err := transaction.Prepare("delete from recipe where oid=?")
+	deleteStatement, err := transaction.Prepare("delete from recipe where id=?")
 	if err != nil {
 		return err
 	}
@@ -123,7 +123,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 	if err != nil {
 		return nil, err
 	}
-	updateStatement, err := transaction.Prepare("update recipe set (name, how_to) = ($2, $3) where oid=$1")
+	updateStatement, err := transaction.Prepare("update recipe set (name, how_to) = (?2, ?3) where id=?1")
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 		return nil, err
 	case rowsAffected == 0:
 		transaction.Rollback() // TODO: log if fail to rollback
-		return nil, err
+		return nil, common.ErrNotFound
 	}
 
 	currentIngredients, err := dao.recipeIngredientDao.GetRecipeIngredients(intRecipeID)
@@ -168,7 +168,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 		}
 	}
 	for i, newIngredient := range recipe.Ingredients {
-		if isNew, _ := containsIngredient(newIngredient, currentIngredients); isNew {
+		if alreadyThere, _ := containsIngredient(newIngredient, currentIngredients); !alreadyThere {
 			ingredientID, err := dao.recipeIngredientDao.AddRecipeIngredient(transaction, recipe.ID, newIngredient)
 			if err != nil {
 				transaction.Rollback() // TODO: log if fail to rollback

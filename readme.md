@@ -25,4 +25,3 @@ Then scp eg.
 - cross-compiling dans image
 - docker with bare exec
 - hook quand stop de process pour fermer connexion bdd, serveur http, ...
-- ingredient routes
