@@ -11,6 +11,7 @@ import (
 
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/handler"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -34,6 +35,7 @@ func main() {
 	ingredientHandler := handler.NewIngredientHandler(datasourceContext.IngredientDao)
 
 	router := mux.NewRouter()
+	router.Use(handlers.CompressHandler)
 	router.HandleFunc("/recipe", recipeHandler.AddRecipe).Methods(http.MethodPost)
 	router.HandleFunc("/recipe/{id}", recipeHandler.GetRecipeByID).Methods(http.MethodGet)
 	router.HandleFunc("/recipe/{id}", recipeHandler.UpdateRecipe).Methods(http.MethodPut)
