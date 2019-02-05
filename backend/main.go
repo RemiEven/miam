@@ -36,28 +36,18 @@ func main() {
 
 	router := mux.NewRouter()
 	router.Use(handlers.CompressHandler)
-	router.Use(handlers.CORS(
-		handlers.AllowedOrigins([]string{"http://localhost:8080"}), // TODO: restrict this based on config
-		// handlers.AllowedHeaders([]string{
-		// 	"Access-Control-Allow-Origin",
-		// }),
-		handlers.AllowedMethods([]string{
-			http.MethodOptions,
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodDelete,
-		}),
-	))
-	router.Use(mux.CORSMethodMiddleware(router))
+	configureCORS(router)
+
 	router.HandleFunc("/recipe", recipeHandler.AddRecipe).Methods(http.MethodPost)
 	router.HandleFunc("/recipe/{id}", recipeHandler.GetRecipeByID).Methods(http.MethodGet)
 	router.HandleFunc("/recipe/{id}", recipeHandler.UpdateRecipe).Methods(http.MethodPut)
 	router.HandleFunc("/recipe/{id}", recipeHandler.DeleteRecipe).Methods(http.MethodDelete)
 	router.HandleFunc("/ingredient", ingredientHandler.GetIngredients).Methods(http.MethodGet)
 	router.HandleFunc("/ingredient/{id}", ingredientHandler.UpdateIngredient).Methods(http.MethodPut)
-	router.HandleFunc("/ingredient/{id}", ingredientHandler.DeleteIngredient).Methods(http.MethodDelete, http.MethodOptions)
+	router.HandleFunc("/ingredient/{id}", ingredientHandler.DeleteIngredient).Methods(http.MethodDelete)
+
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", handler.SpaHandler{})).Methods(http.MethodGet)
+
 	srv := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
 		WriteTimeout: time.Second * 15,
@@ -85,4 +75,19 @@ func main() {
 	srv.Shutdown(context)
 
 	log.Println("Shutting down")
+}
+
+func configureCORS(router *mux.Router) {
+	router.Use(handlers.CORS(
+		handlers.AllowedOrigins([]string{"http://localhost:8080"}), // TODO: restrict this based on config
+		handlers.AllowedMethods([]string{
+			http.MethodOptions,
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+		}),
+	))
+	router.Use(mux.CORSMethodMiddleware(router))
+	router.PathPrefix("/").HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {}).Methods(http.MethodOptions)
 }
