@@ -29,6 +29,7 @@ export default new Vuex.Store({
       commit("removeIngredient", {ingredientId})
     },
     async addRecipe({commit}, {recipe}) {
+      console.log(recipe)
       const recipeId = await recipeApi.addRecipe(recipe)
     },
   },
