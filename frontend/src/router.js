@@ -9,12 +9,17 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: Home,
     },
     {
       path: '/ingredients',
       name: 'ingredients-admin',
-      component: () => import('./views/IngredientAdmin.vue')
+      component: () => import('./views/IngredientAdmin.vue'),
+    },
+    {
+      path: '/recipe/add',
+      name: 'add-recipe-form',
+      component: () => import('./components/AddRecipeForm.vue'),
     }
   ]
 })

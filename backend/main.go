@@ -87,6 +87,12 @@ func configureCORS(router *mux.Router) {
 			http.MethodPut,
 			http.MethodDelete,
 		}),
+		handlers.AllowedHeaders([]string{
+			"Content-Type",
+		}),
+		handlers.ExposedHeaders([]string{
+			"Location",
+		}),
 	))
 	router.Use(mux.CORSMethodMiddleware(router))
 	router.PathPrefix("/").HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {}).Methods(http.MethodOptions)

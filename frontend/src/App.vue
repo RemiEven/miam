@@ -2,7 +2,8 @@
   <div id="app">
     <div id="nav">
       <router-link to="/">Home</router-link> |
-      <router-link to="/ingredients">Ingredients</router-link>
+      <router-link to="/ingredients">Ingredients</router-link> |
+      <router-link to="/recipe/add">Ajouter une recette</router-link>
     </div>
     <router-view/>
   </div>

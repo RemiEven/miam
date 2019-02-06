@@ -21,9 +21,7 @@ export default {
     },
     methods: {
         async deleteIngredient(ingredientId) {
-            console.log("ijijij", ingredientId)
-            await ingredientApi.deleteIngredient(ingredientId)
-            this.$store.dispatch("getAllIngredients")
+            this.$store.dispatch("deleteIngredient", {ingredientId})
         }
     }
 }

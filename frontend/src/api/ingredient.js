@@ -1,4 +1,4 @@
-const backend = 'http://localhost:7040'
+const backend = 'http://localhost:7040' // TODO: put this in config
 
 export default {
     async getIngredients() {
