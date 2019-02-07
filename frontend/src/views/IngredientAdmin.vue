@@ -18,7 +18,7 @@ export default {
   },
   methods: {
     getIngredients() {
-        this.$store.dispatch('getAllIngredients')
+      this.$store.dispatch('getAllIngredients')
     }
   }
 }

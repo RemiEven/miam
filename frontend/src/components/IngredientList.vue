@@ -16,7 +16,7 @@ export default {
     name: 'IngredientList',
     computed: {
         ingredients() {
-            return this.$store.state.allIngredients;
+            return this.$store.state.allIngredients
         }
     },
     methods: {

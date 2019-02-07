@@ -8,7 +8,9 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    allIngredients: []
+    allIngredients: [],
+    addedRecipeId: '',
+    recipe: null,
   },
   mutations: {
     setAllIngredients(state, {ingredients}) {
@@ -17,7 +19,13 @@ export default new Vuex.Store({
     removeIngredient(state, {ingredientId}) {
       state.allIngredients = state.allIngredients
           .filter(ingredient => ingredient.id != ingredientId)
-    }
+    },
+    setRecipe(state, {recipe}) {
+      state.recipe = recipe
+    },
+    setAddedRecipeId(state, {recipeId}) {
+      state.addedRecipeId = recipeId
+    },
   },
   actions: {
     async getAllIngredients({commit}) {
@@ -26,11 +34,15 @@ export default new Vuex.Store({
     },
     async deleteIngredient({commit}, {ingredientId}) {
       await ingredientApi.deleteIngredient(ingredientId)
-      commit("removeIngredient", {ingredientId})
+      commit('removeIngredient', {ingredientId})
     },
-    async addRecipe({commit}, {recipe}) {
-      console.log(recipe)
+    async addRecipe(commit, {recipe}) {
       const recipeId = await recipeApi.addRecipe(recipe)
+      commit.commit('setAddedRecipeId', {recipeId})
+    },
+    async setRecipe({commit}, {recipeId}) {
+      const recipe = await recipeApi.getRecipe(recipeId)
+      commit('setRecipe', {recipe})
     },
   },
 })

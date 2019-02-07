@@ -14,5 +14,10 @@ export default {
         }
         const response = await fetch(`${backend}/recipe`, request)
         return extractRecipeIdFromLocation(response.headers.get("Location"))
-    }
+    },
+    async getRecipe(recipeId) {
+        const response = await fetch(`${backend}/recipe/${recipeId}`)
+        // FIXME: what if recipe not found ? should display 404
+        return await response.json()
+    },
 }

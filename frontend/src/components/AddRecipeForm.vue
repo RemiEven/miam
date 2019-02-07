@@ -33,13 +33,19 @@ export default {
       }
   },
   methods: {
-    add() {
-      this.$store.dispatch('addRecipe', {
+    async add() {
+      await this.$store.dispatch('addRecipe', {
         recipe: {
           name: this.name,
           howTo: this.howTo,
           ingredients: this.ingredients
               .map(({id, name, quantity}) => ({id, name, quantity})),
+        }
+      })
+      this.$router.push({
+        name: 'recipe',
+        params: {
+          id: this.$store.state.addedRecipeId
         }
       })
     },
@@ -54,7 +60,7 @@ export default {
     removeIngredientInput(ingredientLocalId) {
       this.ingredients = this.ingredients
           .filter(ingredient => ingredient.localId != ingredientLocalId)
-    }
+    },
   }
 }
 </script>
