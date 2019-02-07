@@ -10,8 +10,6 @@
 </template>
 
 <script>
-import ingredientApi from '@/api/ingredient'
-
 export default {
     name: 'IngredientList',
     computed: {

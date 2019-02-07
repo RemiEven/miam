@@ -22,7 +22,7 @@ export default {
     this.getRecipe(this.$route.params.id)
   },
   watch: {
-    '$route' (to, from) {
+    '$route' (to) {
       this.getRecipe(to.params.id)
     }
   },
@@ -38,7 +38,7 @@ export default {
     getRecipe(recipeId) {
       this.$store.dispatch('setRecipe', {recipeId})
     },
-    async deleteRecipe(recipeId) {
+    async deleteRecipe() {
       await this.$store.dispatch('deleteRecipe', {
         recipeId: this.$store.state.recipe.id
       })
