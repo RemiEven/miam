@@ -20,4 +20,10 @@ export default {
         // FIXME: what if recipe not found ? should display 404
         return await response.json()
     },
+    async deleteRecipe(recipeId) {
+        const request = {
+            method: 'DELETE',
+        }
+        return await fetch(`${backend}/recipe/${recipeId}`, request)
+    },
 }

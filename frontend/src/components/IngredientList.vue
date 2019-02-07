@@ -20,7 +20,7 @@ export default {
         }
     },
     methods: {
-        async deleteIngredient(ingredientId) {
+        deleteIngredient(ingredientId) {
             this.$store.dispatch("deleteIngredient", {ingredientId})
         }
     }

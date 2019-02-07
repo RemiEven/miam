@@ -44,5 +44,8 @@ export default new Vuex.Store({
       const recipe = await recipeApi.getRecipe(recipeId)
       commit('setRecipe', {recipe})
     },
+    async deleteRecipe(_, {recipeId}) {
+      await recipeApi.deleteRecipe(recipeId)
+    },
   },
 })
