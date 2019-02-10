@@ -99,3 +99,21 @@ func (handler *RecipeHandler) DeleteRecipe(responseWriter http.ResponseWriter, r
 		responseWriter.WriteHeader(http.StatusNoContent)
 	}
 }
+
+func (handler *RecipeHandler) SearchRecipe(responseWriter http.ResponseWriter, request *http.Request) {
+	var search model.RecipeSearch
+	defer request.Body.Close()
+	err := json.NewDecoder(request.Body).Decode(&search)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	results, err := handler.recipeDao.SearchRecipes(search)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+	} else {
+		json.NewEncoder(responseWriter).Encode(results)
+	}
+}

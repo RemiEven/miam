@@ -10,6 +10,7 @@ import (
 	"github.com/RemiEven/miam/model"
 )
 
+// RecipeIngredientDao struct
 type RecipeIngredientDao struct {
 	holder        *databaseHolder
 	ingredientDao *IngredientDao
@@ -28,6 +29,7 @@ func newRecipeIngredientDao(holder *databaseHolder, ingredientDao *IngredientDao
 	return &RecipeIngredientDao{holder, ingredientDao}, nil
 }
 
+// GetRecipeIngredients returns the ingredient of a recipe
 func (dao *RecipeIngredientDao) GetRecipeIngredients(recipeID int) ([]model.RecipeIngredient, error) {
 	rows, err := dao.holder.db.Query(`select
 		recipe_ingredient.ingredient_id, recipe_ingredient.quantity, ingredient.name
@@ -63,6 +65,8 @@ func (dao *RecipeIngredientDao) GetRecipeIngredients(recipeID int) ([]model.Reci
 	return recipeIngredients, nil
 }
 
+// AddRecipeIngredient adds a recipe ingredient.
+// If the ingredient is new (ie. it has not yet got an ID) it is also added.
 func (dao *RecipeIngredientDao) AddRecipeIngredient(transaction *sql.Tx, recipeID string, recipeIngredient model.RecipeIngredient) (string, error) {
 	if len(recipeIngredient.ID) == 0 {
 		// New ingredient
@@ -94,7 +98,8 @@ func (dao *RecipeIngredientDao) AddRecipeIngredient(transaction *sql.Tx, recipeI
 	return recipeIngredient.ID, nil
 }
 
-func (dao *RecipeIngredientDao) IsUsedInRecipe(ingredientID int) (bool, error) {
+// IsUsedInRecipe returns whether an ingredient is used by at least one recipe
+func (dao *RecipeIngredientDao) IsUsedInRecipe(ingredientID int) (bool, error) { // TODO: as is, this seems unused
 	rows, err := dao.holder.db.Query("select exists(select 1 from recipe_ingredient where ingredient_id=?)", ingredientID)
 	if err != nil {
 		return false, nil
@@ -112,6 +117,7 @@ func (dao *RecipeIngredientDao) IsUsedInRecipe(ingredientID int) (bool, error) {
 	return false, fmt.Errorf("Fail to query for recipes using ingredient [%q]", ingredientID)
 }
 
+// DeleteRecipeIngredients deletes the ingredients of a recipe
 func (dao *RecipeIngredientDao) DeleteRecipeIngredients(transaction *sql.Tx, recipeID int) error {
 	deleteStatement, err := transaction.Prepare("delete from recipe_ingredient where recipe_id=?")
 	if err != nil {
@@ -123,6 +129,7 @@ func (dao *RecipeIngredientDao) DeleteRecipeIngredients(transaction *sql.Tx, rec
 	return err
 }
 
+// DeleteRecipeIngredient removes one ingredient from a recipe
 func (dao *RecipeIngredientDao) DeleteRecipeIngredient(transaction *sql.Tx, recipeID, ingredientID int) error {
 	deleteStatement, err := transaction.Prepare("delete from recipe_ingredient where recipe_id=? and ingredient_id=?")
 	if err != nil {
@@ -134,6 +141,7 @@ func (dao *RecipeIngredientDao) DeleteRecipeIngredient(transaction *sql.Tx, reci
 	return err
 }
 
+// UpdateRecipeIngredient updates an ingredient of a recipe
 func (dao *RecipeIngredientDao) UpdateRecipeIngredient(transaction *sql.Tx, recipeID int, recipeIngredient model.RecipeIngredient) error {
 	updateStatement, err := transaction.Prepare("update recipe_ingredient set quantity=?3 where recipe_id=?1 and ingredient_id=?2")
 	if err != nil {

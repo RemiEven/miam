@@ -8,6 +8,7 @@ import (
 	"github.com/RemiEven/miam/model"
 )
 
+// IngredientDao struct
 type IngredientDao struct {
 	holder *databaseHolder
 }
@@ -47,6 +48,7 @@ func (dao *IngredientDao) GetIngredient(ID int) (*model.Ingredient, error) {
 	return nil, common.ErrNotFound
 }
 
+// AddIngredient adds a new ingredient
 func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (string, error) {
 	insertStatement, err := transaction.Prepare("insert into ingredient(name) values(?)")
 	if err != nil {
@@ -79,6 +81,7 @@ func (dao *IngredientDao) DeleteIngredient(ID int) error {
 	return err
 }
 
+// UpdateIngredient updates the name of an ingredient
 func (dao *IngredientDao) UpdateIngredient(ingredient model.Ingredient) error {
 	updateStatement, err := dao.holder.db.Prepare("update ingredient set name=?2 where id=?1")
 	if err != nil {
@@ -100,6 +103,7 @@ func (dao *IngredientDao) UpdateIngredient(ingredient model.Ingredient) error {
 	return nil
 }
 
+// GetAllIngredients returns all ingredients
 func (dao *IngredientDao) GetAllIngredients() ([]model.Ingredient, error) {
 	rows, err := dao.holder.db.Query("select id, name from ingredient")
 	if err != nil {

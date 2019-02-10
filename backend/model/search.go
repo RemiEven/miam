@@ -6,3 +6,9 @@ type RecipeSearch struct {
 	ExcludedRecipes     []string `json:"excludedRecipes,omitempty"`
 	ExcludedIngredients []string `json:"excludedIngredients,omitempty"`
 }
+
+// RecipeSearchResult is the result of a recipe search
+type RecipeSearchResult struct {
+	Total        int      `json:"total"`
+	FirstResults []Recipe `json:"firstResults"`
+}

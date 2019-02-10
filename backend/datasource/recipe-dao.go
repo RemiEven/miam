@@ -1,6 +1,7 @@
 package datasource
 
 import (
+	"errors"
 	"strconv"
 
 	"github.com/RemiEven/miam/common"
@@ -37,14 +38,13 @@ func (dao *RecipeDao) GetRecipe(ID int) (*model.Recipe, error) {
 		if err = rows.Scan(&id, &name, &howTo); err != nil {
 			return nil, err
 		}
-		strID := strconv.Itoa(id)
 		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ID)
 		if err != nil {
 			return nil, err
 		}
 
 		return &model.Recipe{
-			ID: strID,
+			ID: strconv.Itoa(id),
 			BaseRecipe: model.BaseRecipe{
 				Name:        name,
 				HowTo:       howTo,
@@ -91,6 +91,7 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 	return recipeID, transaction.Commit()
 }
 
+// DeleteRecipe deletes a recipe and its ingredients
 func (dao *RecipeDao) DeleteRecipe(ID int) error {
 	transaction, err := dao.holder.db.Begin()
 	if err != nil {
@@ -114,6 +115,7 @@ func (dao *RecipeDao) DeleteRecipe(ID int) error {
 	return transaction.Commit()
 }
 
+// UpdateRecipe updates a recipe
 func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 	intRecipeID, err := strconv.Atoi(recipe.ID)
 	if err != nil {
@@ -182,6 +184,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 	return &recipe, nil
 }
 
+// containsIngredient returns whether a given recipe ingredient is present in a slice of recipe ingredients
 func containsIngredient(searched model.RecipeIngredient, ingredients []model.RecipeIngredient) (bool, model.RecipeIngredient) {
 	for _, ingredient := range ingredients {
 		if ingredient.ID == searched.ID {
@@ -189,4 +192,71 @@ func containsIngredient(searched model.RecipeIngredient, ingredients []model.Rec
 		}
 	}
 	return false, model.RecipeIngredient{}
+}
+
+// SearchRecipes search for recipes according to given search criteria
+func (dao *RecipeDao) SearchRecipes(search model.RecipeSearch) (*model.RecipeSearchResult, error) {
+	results, err := dao.getRandomRecipes(5) // 5 is arbitrary
+	if err != nil {
+		return nil, err
+	}
+	total, err := dao.getRecipeCount()
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.RecipeSearchResult{
+		FirstResults: results,
+		Total:        total,
+	}, nil
+}
+
+// getRandomRecipes returns a given number of randomly selected recipes
+func (dao *RecipeDao) getRandomRecipes(numberWanted int) ([]model.Recipe, error) {
+	rows, err := dao.holder.db.Query("select id, name, how_to from recipe where id in (select id from recipe order by random() limit ?)", numberWanted)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	results := make([]model.Recipe, 0, numberWanted)
+	for rows.Next() {
+		var id int
+		var name, howTo string
+		if err = rows.Scan(&id, &name, &howTo); err != nil {
+			return nil, err
+		}
+		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(id)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, model.Recipe{
+			ID: strconv.Itoa(id),
+			BaseRecipe: model.BaseRecipe{
+				Name:        name,
+				HowTo:       howTo,
+				Ingredients: ingredients,
+			},
+		})
+	}
+	return results, rows.Err()
+}
+
+// getRecipeCount returns the number of saved recipes
+func (dao *RecipeDao) getRecipeCount() (int, error) {
+	rows, err := dao.holder.db.Query("select count(*) from recipe")
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	if rows.Next() {
+		var count int
+		if err := rows.Scan(&count); err != nil {
+			return 0, err
+		}
+		return count, nil
+	} else if err := rows.Err(); err != nil {
+		return 0, err
+	}
+	return 0, errors.New("No row after select count SQL request")
 }
