@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "marked": "^0.6.0",
+    "spectre.css": "^0.5.8",
     "vue": "^2.5.22",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"

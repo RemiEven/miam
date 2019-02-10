@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1>{{ recipe.name }}</h1>
-    <button type="button" v-on:click="deleteRecipe">Supprimer</button>
+    <button type="button" v-on:click="deleteRecipe" class="btn">Supprimer</button>
     <h2>Ingrédients</h2>
     <ul>
       <li v-for="ingredient in recipe.ingredients" :key="ingredient.id">

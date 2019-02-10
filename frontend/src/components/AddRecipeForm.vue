@@ -1,15 +1,21 @@
 <template>
   <div>
-    <form>
-      <input type="text" id="nameInput" name="name" placeholder="Nom" autofocus v-model.trim="name" />
-      <textarea id="how-to-input" name="how-to" placeholder="Instructions" v-model.trim="howTo" />
-      <div v-for="ingredient in ingredients" :key="ingredient.localId">
-        <input type="text" v-bind:id="'ingredientInput' + ingredient.localId" v-bind:name="'ingredient' + ingredient.localId" placeholder="Nom" v-model.trim="ingredient.name" />
-        <input type="text" v-bind:id="'quantityInput' + ingredient.localId" v-bind:name="'quantity' + ingredient.localId" placeholder="Quantity" v-model.trim="ingredient.quantity" />
-        <button type="button" v-on:click="removeIngredientInput(ingredient.localId)">Retirer l'ingrédient</button>
+    <form class="form-horizontal">
+      <input type="text" id="nameInput" name="name" placeholder="Nom" autofocus v-model.trim="name" class="form-group form-input" />
+      <textarea id="how-to-input" name="how-to" placeholder="Instructions" v-model.trim="howTo" class="form-input form-group" rows="5" />
+      <div v-for="ingredient in ingredients" :key="ingredient.localId" class="form-group columns">
+        <span class="column col-5">
+          <input type="text" v-bind:id="'ingredientInput' + ingredient.localId" v-bind:name="'ingredient' + ingredient.localId" placeholder="Nom" v-model.trim="ingredient.name" class="form-input" />
+        </span>
+        <span class="column col-5">
+          <input type="text" v-bind:id="'quantityInput' + ingredient.localId" v-bind:name="'quantity' + ingredient.localId" placeholder="Quantity" v-model.trim="ingredient.quantity" class="form-input" />
+        </span>
+        <span class="column col-2">
+          <button type="button" v-on:click="removeIngredientInput(ingredient.localId)" class="btn btn-action btn-large btn-error"><i class="icon icon-cross"></i></button>
+        </span>
       </div>
-      <button type="button" v-on:click="addIngredientInput">Ajouter un ingrédient</button>
-      <button type="button" v-on:click="add" :disabled="!valid">Ajouter</button>
+      <button type="button" v-on:click="addIngredientInput" class="btn btn-secondary form-group">Ajouter un ingrédient</button>
+      <button type="button" v-on:click="add" :disabled="!valid" class="btn btn-success form-group">Ajouter la recette</button>
     </form>
   </div>
 </template>

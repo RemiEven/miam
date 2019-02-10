@@ -1,6 +1,5 @@
 <template>
   <div>
-    Ingredients :
     <IngredientList />
   </div>
 </template>

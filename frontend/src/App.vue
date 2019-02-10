@@ -1,20 +1,14 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/ingredients">Ingredients</router-link> |
-      <router-link to="/recipe/add">Ajouter une recette</router-link>
-    </div>
+  <div id="app" class="container">
+    <ul class="tab tab-block">
+      <router-link to="/" tag="li" class="tab-item" exact><a>Recettes</a></router-link>
+      <router-link to="/recipe/add" tag="li" class="tab-item"><a>Ajouter une recette</a></router-link>
+      <router-link to="/ingredients" tag="li" class="tab-item"><a>Ingrédients</a></router-link>
+    </ul>
     <router-view/>
   </div>
 </template>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+
 </style>

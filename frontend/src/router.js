@@ -26,5 +26,6 @@ export default new Router({
       name: 'recipe',
       component: () => import('./components/Recipe.vue'),
     },
-  ]
+  ],
+  linkActiveClass: 'active',
 })
