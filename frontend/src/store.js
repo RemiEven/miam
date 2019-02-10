@@ -11,6 +11,15 @@ export default new Vuex.Store({
     allIngredients: [],
     addedRecipeId: '',
     recipe: null,
+    search: {
+      searchTerm: '',
+      excludedRecipes: [],
+      excludedIngredients: [],
+    },
+    searchResults: {
+      total: 0,
+      firstResults: [],
+    },
   },
   mutations: {
     setAllIngredients(state, {ingredients}) {
@@ -25,6 +34,17 @@ export default new Vuex.Store({
     },
     setAddedRecipeId(state, {recipeId}) {
       state.addedRecipeId = recipeId
+    },
+    setSearchResults(state, {searchResults}) {
+      state.searchResults = searchResults
+    },
+    resetSearch(state) {
+      state.search = {
+        searchTerm: '',
+        excludedRecipes: [],
+        excludedIngredients: [],
+      }
+      state.searchResults = {}
     },
   },
   actions: {
@@ -46,6 +66,10 @@ export default new Vuex.Store({
     },
     async deleteRecipe(_, {recipeId}) {
       await recipeApi.deleteRecipe(recipeId)
+    },
+    async search({state, commit}) {
+      const searchResults = await recipeApi.searchRecipe(state.search)
+      commit('setSearchResults', {searchResults})
     },
   },
 })

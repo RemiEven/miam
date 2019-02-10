@@ -9,7 +9,7 @@ export default {
             method: 'POST',
             body: JSON.stringify(recipe),
             headers: new Headers({
-                "Content-Type": "application/json:charset=UTF_8"
+                "Content-Type": "application/json:charset=UTF_8",
             }),
         }
         const response = await fetch(`${backend}/recipe`, request)
@@ -25,5 +25,16 @@ export default {
             method: 'DELETE',
         }
         return await fetch(`${backend}/recipe/${recipeId}`, request)
+    },
+    async searchRecipe() {
+        const request = {
+            method: 'POST',
+            body: JSON.stringify({}),
+            headers: new Headers({
+                "Content-Type": "application/json:charset=UTF_8",
+            }),
+        }
+        const response = await fetch(`${backend}/recipe/search`, request)
+        return await response.json()
     },
 }

@@ -20,18 +20,18 @@ export default {
   name: "IngredientList",
   computed: {
     ingredients() {
-      return this.$store.state.allIngredients;
-    }
+      return this.$store.state.allIngredients
+    },
   },
   methods: {
     deleteIngredient(ingredientId) {
-      this.$store.dispatch("deleteIngredient", { ingredientId });
+      this.$store.dispatch("deleteIngredient", { ingredientId })
     },
     goToAddRecipeForm() {
       this.$router.push({
         name: "add-recipe-form"
       });
     },
-  }
+  },
 };
 </script>

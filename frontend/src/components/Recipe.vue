@@ -1,14 +1,14 @@
 <template>
   <div>
     <h1>{{ recipe.name }}</h1>
-    <button type="button" v-on:click="deleteRecipe" class="btn">Supprimer</button>
+    <button type="button" v-on:click="deleteRecipe" class="btn btn-error">Supprimer</button> <!-- TODO: maybe display delete only on edit page -->
     <h2>Ingrédients</h2>
     <ul>
       <li v-for="ingredient in recipe.ingredients" :key="ingredient.id">
         {{ingredient.name}} {{ingredient.quantity ? `(${ingredient.quantity})` : ''}}
       </li>
     </ul>
-    <h2>Instructions</h2>
+    <h2>Instructions</h2> <!-- TODO: hide if no instructions -->
     <div v-html="compiledHowTo" />
   </div>
 </template>
