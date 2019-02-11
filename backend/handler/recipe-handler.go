@@ -38,6 +38,7 @@ func (handler *RecipeHandler) GetRecipeByID(responseWriter http.ResponseWriter, 
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 	} else {
+		responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(responseWriter).Encode(recipe)
 	}
 }
@@ -80,6 +81,7 @@ func (handler *RecipeHandler) UpdateRecipe(responseWriter http.ResponseWriter, r
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 	} else {
+		responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(responseWriter).Encode(updated)
 	}
 }
@@ -114,6 +116,7 @@ func (handler *RecipeHandler) SearchRecipe(responseWriter http.ResponseWriter, r
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 	} else {
+		responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(responseWriter).Encode(results)
 	}
 }

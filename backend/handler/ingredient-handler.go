@@ -31,6 +31,7 @@ func (handler *IngredientHandler) GetIngredients(responseWriter http.ResponseWri
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	} else {
+		responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(responseWriter).Encode(ingredients)
 	}
 }
@@ -55,6 +56,7 @@ func (handler *IngredientHandler) UpdateIngredient(responseWriter http.ResponseW
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 	} else {
+		responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
 		json.NewEncoder(responseWriter).Encode(ingredient)
 	}
 }
