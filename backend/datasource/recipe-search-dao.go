@@ -1,8 +1,6 @@
 package datasource
 
 import (
-	"log"
-
 	"github.com/RemiEven/miam/model"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
@@ -38,7 +36,6 @@ func buildIndexMapping() mapping.IndexMapping {
 	frenchTextFieldMapping := bleve.NewTextFieldMapping()
 	frenchTextFieldMapping.Analyzer = fr.AnalyzerName
 	frenchTextFieldMapping.Store = false
-	frenchTextFieldMapping.
 
 	idTextFieldMapping := bleve.NewTextFieldMapping()
 	idTextFieldMapping.Analyzer = keyword.Name
@@ -69,19 +66,19 @@ func (dao *RecipeSearchDao) DeleteRecipe(recipeID string) error {
 	return dao.index.Delete(recipeID)
 }
 
-func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, error) {
+func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, int, error) {
 	query := bleve.NewConjunctionQuery()
 	if search.SearchTerm != "" {
 		matchQuery := bleve.NewMatchPhraseQuery(search.SearchTerm)
 		matchQuery.Analyzer = fr.AnalyzerName
 		query.AddQuery(matchQuery)
 	}
-	if search.ExcludedRecipes != nil {
+	if search.ExcludedRecipes != nil && len(search.ExcludedRecipes) != 0 {
 		exclusionQuery := bleve.NewBooleanQuery()
 		exclusionQuery.AddMustNot(bleve.NewDocIDQuery(search.ExcludedRecipes))
 		query.AddQuery(exclusionQuery)
 	}
-	if search.ExcludedIngredients != nil {
+	if search.ExcludedIngredients != nil && len(search.ExcludedIngredients) != 0 {
 		exclusionQuery := bleve.NewBooleanQuery()
 		for _, excluded := range search.ExcludedIngredients {
 			excludeIngredientQuery := bleve.NewTermQuery(excluded)
@@ -93,7 +90,7 @@ func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, 
 
 	searchResults, err := dao.index.Search(bleve.NewSearchRequest(query))
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	ids := make([]string, len(searchResults.Hits))
@@ -101,5 +98,5 @@ func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, 
 		ids[i] = searchResults.Hits[i].ID
 	}
 
-	return ids, nil
+	return ids, int(searchResults.Total), nil
 }

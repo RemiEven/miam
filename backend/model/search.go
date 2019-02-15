@@ -7,6 +7,13 @@ type RecipeSearch struct {
 	ExcludedIngredients []string `json:"excludedIngredients,omitempty"`
 }
 
+// IsEmpty returns true if the search contains no criteria
+func (search RecipeSearch) IsEmpty() bool {
+	return len(search.SearchTerm) == 0 &&
+		(search.ExcludedRecipes == nil || len(search.ExcludedRecipes) == 0) &&
+		(search.ExcludedIngredients == nil || len(search.ExcludedIngredients) == 0)
+}
+
 // RecipeSearchResult is the result of a recipe search
 type RecipeSearchResult struct {
 	Total        int      `json:"total"`

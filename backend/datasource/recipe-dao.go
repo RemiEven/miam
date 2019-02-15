@@ -3,6 +3,7 @@ package datasource
 import (
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/model"
@@ -55,6 +56,45 @@ func (dao *RecipeDao) GetRecipe(ID int) (*model.Recipe, error) {
 		return nil, err
 	}
 	return nil, common.ErrNotFound
+}
+
+// GetRecipes returns the recipes with the given IDs or an empty slice
+func (dao *RecipeDao) GetRecipes(IDs []int) ([]model.Recipe, error) {
+	if len(IDs) == 0 {
+		return make([]model.Recipe, 0), nil
+	}
+	queryParamPlaceholders := "?" + strings.Repeat("?,", len(IDs)-1)
+	queryParams := make([]interface{}, len(IDs))
+	for i := range IDs {
+		queryParams[i] = IDs[i]
+	}
+	rows, err := dao.holder.db.Query("select id, name, how_to from recipe where id in ("+queryParamPlaceholders+")", queryParams...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	results := make([]model.Recipe, 0, len(IDs))
+	for rows.Next() {
+		var id int
+		var name, howTo string
+		if err = rows.Scan(&id, &name, &howTo); err != nil {
+			return nil, err
+		}
+		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(id)
+		if err != nil {
+			return nil, err
+		}
+
+		results = append(results, model.Recipe{
+			ID: strconv.Itoa(id),
+			BaseRecipe: model.BaseRecipe{
+				Name:        name,
+				HowTo:       howTo,
+				Ingredients: ingredients,
+			},
+		})
+	}
+	return results, rows.Err()
 }
 
 // AddRecipe adds the given recipe
@@ -194,9 +234,9 @@ func containsIngredient(searched model.RecipeIngredient, ingredients []model.Rec
 	return false, model.RecipeIngredient{}
 }
 
-// SearchRecipes search for recipes according to given search criteria
-func (dao *RecipeDao) SearchRecipes(search model.RecipeSearch) (*model.RecipeSearchResult, error) {
-	results, err := dao.getRandomRecipes(5) // 5 is arbitrary
+// GetRandomRecipes search for recipes according to given search criteria
+func (dao *RecipeDao) GetRandomRecipes(search model.RecipeSearch) (*model.RecipeSearchResult, error) {
+	results, err := dao.getRandomRecipes(10) // 10 is arbitrary FIXME: set this at the handler level
 	if err != nil {
 		return nil, err
 	}

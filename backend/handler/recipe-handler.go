@@ -6,21 +6,24 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/RemiEven/miam/model"
-
 	"github.com/RemiEven/miam/datasource"
+	"github.com/RemiEven/miam/model"
 	"github.com/gorilla/mux"
 )
+
+// FIXME: content-type application/json is not set in response where it should be
 
 // RecipeHandler is a recipe handler
 type RecipeHandler struct {
 	recipeDao *datasource.RecipeDao
+	searchDao *datasource.RecipeSearchDao
 }
 
 // NewRecipeHandler creates a new recipe handler
-func NewRecipeHandler(dao *datasource.RecipeDao) *RecipeHandler {
+func NewRecipeHandler(recipeDao *datasource.RecipeDao, searchDao *datasource.RecipeSearchDao) *RecipeHandler {
 	return &RecipeHandler{
-		dao,
+		recipeDao,
+		searchDao,
 	}
 }
 
@@ -57,10 +60,27 @@ func (handler *RecipeHandler) AddRecipe(responseWriter http.ResponseWriter, requ
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
-	} else {
-		responseWriter.Header().Add("Location", id)
-		responseWriter.WriteHeader(http.StatusCreated)
+		return
 	}
+	intID, err := strconv.Atoi(id)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	addedRecipe, err := handler.recipeDao.GetRecipe(intID)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if err = handler.searchDao.IndexRecipe(*addedRecipe); err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	responseWriter.Header().Add("Location", id)
+	responseWriter.WriteHeader(http.StatusCreated)
 }
 
 // UpdateRecipe updates a recipe
@@ -80,15 +100,22 @@ func (handler *RecipeHandler) UpdateRecipe(responseWriter http.ResponseWriter, r
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
-	} else {
-		responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(responseWriter).Encode(updated)
+		return
 	}
+	if err = handler.searchDao.IndexRecipe(*updated); err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(responseWriter).Encode(updated)
 }
 
+// DeleteRecipe deletes a recipe
 func (handler *RecipeHandler) DeleteRecipe(responseWriter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
-	id, err := strconv.Atoi(vars["id"])
+	strID := vars["id"]
+	id, err := strconv.Atoi(strID)
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusBadRequest)
@@ -97,26 +124,12 @@ func (handler *RecipeHandler) DeleteRecipe(responseWriter http.ResponseWriter, r
 	if err = handler.recipeDao.DeleteRecipe(id); err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
-	} else {
-		responseWriter.WriteHeader(http.StatusNoContent)
-	}
-}
-
-func (handler *RecipeHandler) SearchRecipe(responseWriter http.ResponseWriter, request *http.Request) {
-	var search model.RecipeSearch
-	defer request.Body.Close()
-	err := json.NewDecoder(request.Body).Decode(&search)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	results, err := handler.recipeDao.SearchRecipes(search)
-	if err != nil {
+	if err = handler.searchDao.DeleteRecipe(strID); err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
-	} else {
-		responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(responseWriter).Encode(results)
+		return
 	}
+	responseWriter.WriteHeader(http.StatusNoContent)
 }
