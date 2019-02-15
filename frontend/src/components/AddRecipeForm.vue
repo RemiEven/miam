@@ -21,6 +21,8 @@
 </template>
 
 <script>
+import { notBlank } from '@/utils'
+
 // TODO: also handle already existing ingredients with their id
 export default {
   name: 'add-recipe-form',
@@ -34,8 +36,7 @@ export default {
   },
   computed: {
       valid() {
-          // FIXME: also test that all ingredients either have non blank id or non blank name
-          return !!this.name
+          return notBlank(this.name) && this.ingredients.every(({id, name}) => notBlank(id) || notBlank(name))
       }
   },
   methods: {
