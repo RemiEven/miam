@@ -18,7 +18,7 @@ func NewContext() (*Context, error) {
 	return &Context{
 		datasourceContext,
 		newRecipeService(datasourceContext.RecipeDao, datasourceContext.RecipeSearchDao),
-		newIngredientService(datasourceContext.IngredientDao),
+		newIngredientService(datasourceContext.IngredientDao, datasourceContext.RecipeIngredientDao),
 	}, nil
 }
 

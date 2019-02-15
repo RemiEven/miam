@@ -102,7 +102,7 @@ func (dao *RecipeIngredientDao) AddRecipeIngredient(transaction *sql.Tx, recipeI
 }
 
 // IsUsedInRecipe returns whether an ingredient is used by at least one recipe
-func (dao *RecipeIngredientDao) IsUsedInRecipe(ingredientID string) (bool, error) { // TODO: as is, this seems unused
+func (dao *RecipeIngredientDao) IsUsedInRecipe(ingredientID string) (bool, error) {
 	intID, err := toSqliteID(ingredientID)
 	if err != nil {
 		return false, err

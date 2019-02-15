@@ -21,7 +21,7 @@ Then scp eg.
 - health
 - config
 - gestion d'erreur
-    - mutualisation dans les handlers + utilisation de wrap pour avoir un semblant de stacktrace
+    - mutualisation dans les handlers + utilisation de wrap pour avoir un semblant de stacktrace + messages pas statiques pour les erreurs dans common
 - version via build and -ldflag
 - cross-compiling dans image
 - docker with bare exec

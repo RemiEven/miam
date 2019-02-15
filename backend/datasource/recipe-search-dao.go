@@ -58,14 +58,17 @@ func buildIndexMapping() mapping.IndexMapping {
 	return indexMapping
 }
 
+// IndexRecipe indexes a new or already existing recipe in the search engine
 func (dao *RecipeSearchDao) IndexRecipe(recipe model.Recipe) error {
 	return dao.index.Index(recipe.ID, recipe)
 }
 
+// DeleteRecipe deletes a recipe from the search engine
 func (dao *RecipeSearchDao) DeleteRecipe(recipeID string) error {
 	return dao.index.Delete(recipeID)
 }
 
+// SearchRecipes searches for recipes according to the given criteria
 func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, int, error) {
 	query := bleve.NewConjunctionQuery()
 	if search.SearchTerm != "" {
