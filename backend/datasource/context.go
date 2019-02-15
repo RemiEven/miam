@@ -41,7 +41,7 @@ func NewContext() (*Context, error) {
 	}, nil
 }
 
-// Close cleanly closes the context by releasing any resources it might have
+// Close cleanly closes the context by releasing any resources it might hold
 func (context *Context) Close() error {
 	return context.holder.Close()
 }

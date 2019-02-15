@@ -11,13 +11,12 @@ import (
 
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/handler"
+	"github.com/RemiEven/miam/service"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 const port = 7040
-
-// var jsonDir = flag.String("ee", "nom", "json directory") // FIXME: remove
 
 var (
 	recipeDao *datasource.RecipeDao
@@ -26,52 +25,15 @@ var (
 func main() {
 	log.Println("Starting") // FIXME: this writes to stderr apparently
 
-	datasourceContext, err := datasource.NewContext()
+	serviceContext, err := service.NewContext()
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
 	}
-
-	// datasourceContext.RecipeSearchDao.IndexRecipe(model.Recipe{
-	// 	ID: "1",
-	// 	BaseRecipe: model.BaseRecipe{
-	// 		Name:  "truc",
-	// 		HowTo: "instructions compliquées",
-	// 		Ingredients: []model.RecipeIngredient{
-	// 			model.RecipeIngredient{
-	// 				Quantity: "un peu",
-	// 				Ingredient: model.Ingredient{
-	// 					ID: "2",
-	// 					BaseIngredient: model.BaseIngredient{
-	// 						Name: "brocolis",
-	// 					},
-	// 				},
-	// 			},
-	// 		},
-	// 	},
-	// })
-	// flag.Parse()
-	// log.Printf("Searching [%s]\n", *jsonDir)
-	// truc, _, err := datasourceContext.RecipeSearchDao.SearchRecipes(model.RecipeSearch{
-	// 	SearchTerm:          *jsonDir,
-	// 	ExcludedRecipes:     []string{"3"},
-	// 	ExcludedIngredients: []string{"1"},
-	// })
-	// if err != nil {
-	// 	log.Println(err)
-	// 	os.Exit(1)
-	// }
-	// log.Printf("got %d result(s)", len(truc))
-	// for _, id := range truc {
-	// 	log.Println(id)
-	// }
-	// os.Exit(1)
-
 	// defer datasourceContext.Close() // TODO: this clashes with the os.Exit; get rid of those by extracting a method
 
-	recipeHandler := handler.NewRecipeHandler(datasourceContext.RecipeDao, datasourceContext.RecipeSearchDao)
-	ingredientHandler := handler.NewIngredientHandler(datasourceContext.IngredientDao)
-	searchHandler := handler.NewSearchHandler(datasourceContext.RecipeDao, datasourceContext.RecipeSearchDao)
+	recipeHandler := handler.NewRecipeHandler(serviceContext.RecipeService)
+	ingredientHandler := handler.NewIngredientHandler(serviceContext.IngredientService)
 
 	router := mux.NewRouter()
 	router.Use(handlers.CompressHandler)
@@ -81,7 +43,7 @@ func main() {
 	router.HandleFunc("/recipe/{id}", recipeHandler.GetRecipeByID).Methods(http.MethodGet)
 	router.HandleFunc("/recipe/{id}", recipeHandler.UpdateRecipe).Methods(http.MethodPut)
 	router.HandleFunc("/recipe/{id}", recipeHandler.DeleteRecipe).Methods(http.MethodDelete)
-	router.HandleFunc("/recipe/search", searchHandler.SearchRecipe).Methods(http.MethodPost)
+	router.HandleFunc("/recipe/search", recipeHandler.SearchRecipe).Methods(http.MethodPost)
 	router.HandleFunc("/ingredient", ingredientHandler.GetIngredients).Methods(http.MethodGet)
 	router.HandleFunc("/ingredient/{id}", ingredientHandler.UpdateIngredient).Methods(http.MethodPut)
 	router.HandleFunc("/ingredient/{id}", ingredientHandler.DeleteIngredient).Methods(http.MethodDelete)

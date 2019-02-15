@@ -4,46 +4,37 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
 
-	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/model"
+	"github.com/RemiEven/miam/service"
 	"github.com/gorilla/mux"
 )
 
-// FIXME: content-type application/json is not set in response where it should be
-
 // RecipeHandler is a recipe handler
 type RecipeHandler struct {
-	recipeDao *datasource.RecipeDao
-	searchDao *datasource.RecipeSearchDao
+	recipeService *service.RecipeService
 }
 
 // NewRecipeHandler creates a new recipe handler
-func NewRecipeHandler(recipeDao *datasource.RecipeDao, searchDao *datasource.RecipeSearchDao) *RecipeHandler {
+func NewRecipeHandler(recipeService *service.RecipeService) *RecipeHandler {
 	return &RecipeHandler{
-		recipeDao,
-		searchDao,
+		recipeService,
 	}
 }
 
 // GetRecipeByID handles a recipe request
 func (handler *RecipeHandler) GetRecipeByID(responseWriter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
-	id, err := strconv.Atoi(vars["id"])
+
+	recipe, err := handler.recipeService.GetRecipe(vars["id"])
 	if err != nil {
 		log.Println(err)
-		responseWriter.WriteHeader(http.StatusBadRequest)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	recipe, err := handler.recipeDao.GetRecipe(id)
-	if err != nil { // TODO: handle errNotFound differently
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
-	} else {
-		responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(responseWriter).Encode(recipe)
-	}
+
+	responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(responseWriter).Encode(recipe)
 }
 
 // AddRecipe adds a recipe
@@ -56,29 +47,14 @@ func (handler *RecipeHandler) AddRecipe(responseWriter http.ResponseWriter, requ
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	id, err := handler.recipeDao.AddRecipe(&recipe)
+
+	id, err := handler.recipeService.AddRecipe(recipe)
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	intID, err := strconv.Atoi(id)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	addedRecipe, err := handler.recipeDao.GetRecipe(intID)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	if err = handler.searchDao.IndexRecipe(*addedRecipe); err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+
 	responseWriter.Header().Add("Location", id)
 	responseWriter.WriteHeader(http.StatusCreated)
 }
@@ -93,20 +69,15 @@ func (handler *RecipeHandler) UpdateRecipe(responseWriter http.ResponseWriter, r
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	updated, err := handler.recipeDao.UpdateRecipe(model.Recipe{
-		ID:         mux.Vars(request)["id"],
-		BaseRecipe: recipe,
-	})
+
+	id := mux.Vars(request)["id"]
+	updated, err := handler.recipeService.UpdateRecipe(id, recipe)
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	if err = handler.searchDao.IndexRecipe(*updated); err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+
 	responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
 	json.NewEncoder(responseWriter).Encode(updated)
 }
@@ -115,21 +86,32 @@ func (handler *RecipeHandler) UpdateRecipe(responseWriter http.ResponseWriter, r
 func (handler *RecipeHandler) DeleteRecipe(responseWriter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	strID := vars["id"]
-	id, err := strconv.Atoi(strID)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if err = handler.recipeDao.DeleteRecipe(id); err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	if err = handler.searchDao.DeleteRecipe(strID); err != nil {
+
+	if err := handler.recipeService.DeleteRecipe(strID); err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	responseWriter.WriteHeader(http.StatusNoContent)
+}
+
+// SearchRecipe searches for recipes
+func (handler *RecipeHandler) SearchRecipe(responseWriter http.ResponseWriter, request *http.Request) {
+	var search model.RecipeSearch
+	defer request.Body.Close()
+	err := json.NewDecoder(request.Body).Decode(&search)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	results, err := handler.recipeService.SearchRecipe(search)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(responseWriter).Encode(results)
 }
