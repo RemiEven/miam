@@ -30,7 +30,7 @@ func main() {
 		log.Println(err)
 		os.Exit(1)
 	}
-	// defer datasourceContext.Close() // TODO: this clashes with the os.Exit; get rid of those by extracting a method
+	defer serviceContext.Close()
 
 	recipeHandler := handler.NewRecipeHandler(serviceContext.RecipeService)
 	ingredientHandler := handler.NewIngredientHandler(serviceContext.IngredientService)
