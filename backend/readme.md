@@ -21,8 +21,9 @@ Then scp eg.
 - health
 - config
 - gestion d'erreur
+    - mutualisation dans les handlers + utilisation de wrap pour avoir un semblant de stacktrace
 - version via build and -ldflag
 - cross-compiling dans image
 - docker with bare exec
-- hook quand stop de process pour fermer connexion bdd, serveur http, ...
+    - seems difficult since we use cgo. alpine is probably the best here
 - lint

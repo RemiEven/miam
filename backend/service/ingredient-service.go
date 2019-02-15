@@ -1,8 +1,6 @@
 package service
 
 import (
-	"strconv"
-
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/model"
 )
@@ -38,9 +36,5 @@ func (service *IngredientService) UpdateIngredient(ID string, update model.BaseI
 
 // DeleteIngredient deletes the ingredient with the given id
 func (service *IngredientService) DeleteIngredient(ID string) error {
-	intID, err := strconv.Atoi(ID)
-	if err != nil {
-		return err
-	}
-	return service.ingredientDao.DeleteIngredient(intID)
+	return service.ingredientDao.DeleteIngredient(ID)
 }

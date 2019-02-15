@@ -1,8 +1,6 @@
 package service
 
 import (
-	"strconv"
-
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/model"
 )
@@ -26,17 +24,9 @@ func (service *RecipeService) SearchRecipe(search model.RecipeSearch) (*model.Re
 	if search.IsEmpty() {
 		return service.recipeDao.GetRandomRecipes(search)
 	}
-	strIDs, total, err := service.searchDao.SearchRecipes(search)
+	IDs, total, err := service.searchDao.SearchRecipes(search)
 	if err != nil {
 		return nil, err
-	}
-	IDs := make([]int, len(strIDs))
-	for i := range strIDs {
-		ID, err := strconv.Atoi(strIDs[i])
-		if err != nil {
-			return nil, err
-		}
-		IDs[i] = ID
 	}
 	recipes, err := service.recipeDao.GetRecipes(IDs)
 	if err != nil {
@@ -50,11 +40,7 @@ func (service *RecipeService) SearchRecipe(search model.RecipeSearch) (*model.Re
 
 // GetRecipe gets a recipe by its ID
 func (service *RecipeService) GetRecipe(ID string) (*model.Recipe, error) {
-	intID, err := strconv.Atoi(ID)
-	if err != nil {
-		return nil, err
-	}
-	return service.recipeDao.GetRecipe(intID)
+	return service.recipeDao.GetRecipe(ID)
 }
 
 // AddRecipe adds a new recipe
@@ -63,11 +49,7 @@ func (service *RecipeService) AddRecipe(recipe model.BaseRecipe) (string, error)
 	if err != nil {
 		return "", err
 	}
-	intID, err := strconv.Atoi(id)
-	if err != nil {
-		return "", err
-	}
-	addedRecipe, err := service.recipeDao.GetRecipe(intID)
+	addedRecipe, err := service.recipeDao.GetRecipe(id)
 	if err != nil {
 		return "", err
 	}
@@ -94,11 +76,7 @@ func (service *RecipeService) UpdateRecipe(ID string, recipe model.BaseRecipe) (
 
 // DeleteRecipe deletes a recipe
 func (service *RecipeService) DeleteRecipe(id string) error {
-	intID, err := strconv.Atoi(id)
-	if err != nil {
-		return err
-	}
-	if err = service.recipeDao.DeleteRecipe(intID); err != nil {
+	if err := service.recipeDao.DeleteRecipe(id); err != nil {
 		return err
 	}
 	return service.searchDao.DeleteRecipe(id)

@@ -2,7 +2,6 @@ package datasource
 
 import (
 	"database/sql"
-	"strconv"
 
 	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/model"
@@ -24,20 +23,23 @@ func newIngredientDao(holder *databaseHolder) (*IngredientDao, error) {
 }
 
 // GetIngredient returns the ingredient with the given ID or nil
-func (dao *IngredientDao) GetIngredient(ID int) (*model.Ingredient, error) {
-	rows, err := dao.holder.db.Query("select id, name from ingredient where id=?", ID)
+func (dao *IngredientDao) GetIngredient(ID string) (*model.Ingredient, error) {
+	oid, err := toSqliteID(ID)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := dao.holder.db.Query("select name from ingredient where id=?", oid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	if rows.Next() {
-		var id int
 		var name string
-		if err := rows.Scan(&id, &name); err != nil {
+		if err := rows.Scan(&name); err != nil {
 			return nil, err
 		}
 		return &model.Ingredient{
-			ID: strconv.Itoa(id),
+			ID: ID,
 			BaseIngredient: model.BaseIngredient{
 				Name: name,
 			},
@@ -65,19 +67,23 @@ func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (strin
 		return "", err
 	}
 
-	return strconv.Itoa(int(id)), nil
+	return fromSqliteID(sqliteID(id)), nil
 }
 
 // DeleteIngredient delete the ingredient with the given id if present.
 // It is up to the caller to ensure no recipe uses the ingredient.
-func (dao *IngredientDao) DeleteIngredient(ID int) error {
+func (dao *IngredientDao) DeleteIngredient(ID string) error {
+	oid, err := toSqliteID(ID)
+	if err != nil {
+		return err
+	}
 	deleteStatement, err := dao.holder.db.Prepare("delete from ingredient where id=?")
 	if err != nil {
 		return err
 	}
 	defer deleteStatement.Close()
 
-	_, err = deleteStatement.Exec(ID)
+	_, err = deleteStatement.Exec(oid)
 	return err
 }
 
@@ -119,7 +125,7 @@ func (dao *IngredientDao) GetAllIngredients() ([]model.Ingredient, error) {
 			return nil, err
 		}
 		ingredients = append(ingredients, model.Ingredient{
-			ID: strconv.Itoa(id),
+			ID: fromSqliteID(id),
 			BaseIngredient: model.BaseIngredient{
 				Name: name,
 			},

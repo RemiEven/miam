@@ -2,7 +2,6 @@ package datasource
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/RemiEven/miam/common"
@@ -27,16 +26,19 @@ func newRecipeDao(holder *databaseHolder, recipeIngredientDao *RecipeIngredientD
 }
 
 // GetRecipe returns the recipe with the given ID or nil
-func (dao *RecipeDao) GetRecipe(ID int) (*model.Recipe, error) {
-	rows, err := dao.holder.db.Query("select id, name, how_to from recipe where id=?", ID)
+func (dao *RecipeDao) GetRecipe(ID string) (*model.Recipe, error) {
+	oid, err := toSqliteID(ID)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := dao.holder.db.Query("select name, how_to from recipe where id=?", oid)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	if rows.Next() {
-		var id int
 		var name, howTo string
-		if err = rows.Scan(&id, &name, &howTo); err != nil {
+		if err = rows.Scan(&name, &howTo); err != nil {
 			return nil, err
 		}
 		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ID)
@@ -45,7 +47,7 @@ func (dao *RecipeDao) GetRecipe(ID int) (*model.Recipe, error) {
 		}
 
 		return &model.Recipe{
-			ID: strconv.Itoa(id),
+			ID: ID,
 			BaseRecipe: model.BaseRecipe{
 				Name:        name,
 				HowTo:       howTo,
@@ -59,14 +61,17 @@ func (dao *RecipeDao) GetRecipe(ID int) (*model.Recipe, error) {
 }
 
 // GetRecipes returns the recipes with the given IDs or an empty slice
-func (dao *RecipeDao) GetRecipes(IDs []int) ([]model.Recipe, error) {
+func (dao *RecipeDao) GetRecipes(IDs []string) ([]model.Recipe, error) {
 	if len(IDs) == 0 {
 		return make([]model.Recipe, 0), nil
 	}
 	queryParamPlaceholders := "?" + strings.Repeat("?,", len(IDs)-1)
 	queryParams := make([]interface{}, len(IDs))
+	var err error
 	for i := range IDs {
-		queryParams[i] = IDs[i]
+		if queryParams[i], err = toSqliteID(IDs[i]); err != nil {
+			return nil, err
+		}
 	}
 	rows, err := dao.holder.db.Query("select id, name, how_to from recipe where id in ("+queryParamPlaceholders+")", queryParams...)
 	if err != nil {
@@ -75,18 +80,19 @@ func (dao *RecipeDao) GetRecipes(IDs []int) ([]model.Recipe, error) {
 	defer rows.Close()
 	results := make([]model.Recipe, 0, len(IDs))
 	for rows.Next() {
-		var id int
+		var id sqliteID
 		var name, howTo string
 		if err = rows.Scan(&id, &name, &howTo); err != nil {
 			return nil, err
 		}
-		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(id)
+		recipeID := fromSqliteID(id)
+		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(recipeID)
 		if err != nil {
 			return nil, err
 		}
 
 		results = append(results, model.Recipe{
-			ID: strconv.Itoa(id),
+			ID: recipeID,
 			BaseRecipe: model.BaseRecipe{
 				Name:        name,
 				HowTo:       howTo,
@@ -119,7 +125,7 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 		transaction.Rollback() // TODO: log if fail to rollback
 		return "", err
 	}
-	recipeID := strconv.Itoa(int(id))
+	recipeID := fromSqliteID(int(id))
 
 	for _, recipeIngredient := range recipe.Ingredients {
 		_, err = dao.recipeIngredientDao.AddRecipeIngredient(transaction, recipeID, recipeIngredient)
@@ -132,7 +138,11 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 }
 
 // DeleteRecipe deletes a recipe and its ingredients
-func (dao *RecipeDao) DeleteRecipe(ID int) error {
+func (dao *RecipeDao) DeleteRecipe(ID string) error {
+	oid, err := toSqliteID(ID)
+	if err != nil {
+		return err
+	}
 	transaction, err := dao.holder.db.Begin()
 	if err != nil {
 		return err
@@ -143,7 +153,7 @@ func (dao *RecipeDao) DeleteRecipe(ID int) error {
 	}
 	defer deleteStatement.Close()
 
-	if _, err := deleteStatement.Exec(ID); err != nil {
+	if _, err := deleteStatement.Exec(oid); err != nil {
 		transaction.Rollback() // TODO: log if fail to rollback
 		return err
 	}
@@ -157,10 +167,6 @@ func (dao *RecipeDao) DeleteRecipe(ID int) error {
 
 // UpdateRecipe updates a recipe
 func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
-	intRecipeID, err := strconv.Atoi(recipe.ID)
-	if err != nil {
-		return nil, err
-	}
 	transaction, err := dao.holder.db.Begin()
 	if err != nil {
 		return nil, err
@@ -170,7 +176,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 		return nil, err
 	}
 
-	result, err := updateStatement.Exec(intRecipeID, recipe.Name, recipe.HowTo)
+	result, err := updateStatement.Exec(recipe.ID, recipe.Name, recipe.HowTo)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +191,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 		return nil, common.ErrNotFound
 	}
 
-	currentIngredients, err := dao.recipeIngredientDao.GetRecipeIngredients(intRecipeID)
+	currentIngredients, err := dao.recipeIngredientDao.GetRecipeIngredients(recipe.ID)
 	if err != nil {
 		transaction.Rollback() // TODO: log if fail to rollback
 		return nil, err
@@ -193,16 +199,12 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 	for _, currentIngredient := range currentIngredients {
 		stillThere, newIngredient := containsIngredient(currentIngredient, recipe.Ingredients)
 		if !stillThere {
-			intIngredientID, err := strconv.Atoi(currentIngredient.ID)
-			if err != nil {
-				return nil, err
-			}
-			if err = dao.recipeIngredientDao.DeleteRecipeIngredient(transaction, intRecipeID, intIngredientID); err != nil {
+			if err = dao.recipeIngredientDao.DeleteRecipeIngredient(transaction, recipe.ID, currentIngredient.ID); err != nil {
 				transaction.Rollback() // TODO: log if fail to rollback
 				return nil, err
 			}
 		} else if newIngredient.Quantity != currentIngredient.Quantity {
-			if err = dao.recipeIngredientDao.UpdateRecipeIngredient(transaction, intRecipeID, newIngredient); err != nil {
+			if err = dao.recipeIngredientDao.UpdateRecipeIngredient(transaction, recipe.ID, newIngredient); err != nil {
 				transaction.Rollback() // TODO: log if fail to rollback
 				return nil, err
 			}
@@ -265,13 +267,14 @@ func (dao *RecipeDao) getRandomRecipes(numberWanted int) ([]model.Recipe, error)
 		if err = rows.Scan(&id, &name, &howTo); err != nil {
 			return nil, err
 		}
-		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(id)
+		recipeID := fromSqliteID(id)
+		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(recipeID)
 		if err != nil {
 			return nil, err
 		}
 
 		results = append(results, model.Recipe{
-			ID: strconv.Itoa(id),
+			ID: recipeID,
 			BaseRecipe: model.BaseRecipe{
 				Name:        name,
 				HowTo:       howTo,
