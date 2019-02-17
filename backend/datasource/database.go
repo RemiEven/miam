@@ -2,10 +2,9 @@ package datasource
 
 import (
 	"database/sql"
-	"log"
 
-	// Necessary to load sqlite3 driver
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // Necessary to load sqlite3 driver
+	"github.com/sirupsen/logrus"
 )
 
 // databaseHolder holds a database connection
@@ -24,6 +23,6 @@ func newDatabaseHolder() (*databaseHolder, error) {
 
 // Close closes the connection to the database
 func (holder *databaseHolder) Close() error {
-	log.Println("Closing database connection")
+	logrus.Info("Closing sqlite database connection")
 	return holder.db.Close()
 }

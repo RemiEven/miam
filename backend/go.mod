@@ -16,6 +16,7 @@ require (
 	github.com/gorilla/mux v1.6.2
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/philhofer/fwd v1.0.0 // indirect
+	github.com/sirupsen/logrus v1.3.0
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
 	github.com/tinylib/msgp v1.1.0 // indirect
 	github.com/willf/bitset v1.1.9 // indirect

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +13,7 @@ import (
 	"github.com/RemiEven/miam/service"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 const port = 7040
@@ -23,12 +23,16 @@ var (
 )
 
 func main() {
-	log.Println("Starting") // FIXME: this writes to stderr apparently
+	logrus.SetOutput(os.Stdout)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
+
+	logrus.Info("Starting")
 
 	serviceContext, err := service.NewContext()
 	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+		logrus.Fatal(err)
 	}
 	defer serviceContext.Close()
 
@@ -59,9 +63,16 @@ func main() {
 	}
 
 	go func() {
-		log.Printf("Will try to listen on port %d", port)
+		logrus.WithField("port", port).Info("Will try to start http server")
 		if err := srv.ListenAndServe(); err != nil {
-			log.Println(err)
+			logrus.Error(err)
+			if err == http.ErrServerClosed {
+				logrus.Info("Closed http server")
+			} else {
+				logrus.Error(err)
+				serviceContext.Close()
+				os.Exit(1)
+			}
 		}
 	}()
 
@@ -76,7 +87,7 @@ func main() {
 
 	srv.Shutdown(context)
 
-	log.Println("Shutting down")
+	logrus.Info("Shutting down")
 }
 
 func configureCORS(router *mux.Router) {

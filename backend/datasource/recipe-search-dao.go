@@ -6,6 +6,7 @@ import (
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/analysis/lang/fr"
 	"github.com/blevesearch/bleve/mapping"
+	"github.com/sirupsen/logrus"
 )
 
 const indexPath = "miam.bleve"
@@ -16,10 +17,10 @@ type RecipeSearchDao struct {
 }
 
 func newRecipeSearchDao() (*RecipeSearchDao, error) {
-	beerIndex, err := bleve.Open(indexPath)
+	recipeIndex, err := bleve.Open(indexPath)
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		mapping := buildIndexMapping()
-		beerIndex, err = bleve.New(indexPath, mapping)
+		recipeIndex, err = bleve.New(indexPath, mapping)
 		if err != nil {
 			return nil, err
 		}
@@ -28,7 +29,7 @@ func newRecipeSearchDao() (*RecipeSearchDao, error) {
 	}
 
 	return &RecipeSearchDao{
-		index: beerIndex,
+		index: recipeIndex,
 	}, nil
 }
 

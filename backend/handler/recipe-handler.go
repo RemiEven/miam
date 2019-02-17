@@ -2,12 +2,13 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
+
 	"net/http"
 
 	"github.com/RemiEven/miam/model"
 	"github.com/RemiEven/miam/service"
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 // RecipeHandler is a recipe handler
@@ -28,7 +29,7 @@ func (handler *RecipeHandler) GetRecipeByID(responseWriter http.ResponseWriter, 
 
 	recipe, err := handler.recipeService.GetRecipe(vars["id"])
 	if err != nil {
-		log.Println(err)
+		logrus.Error(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -43,14 +44,14 @@ func (handler *RecipeHandler) AddRecipe(responseWriter http.ResponseWriter, requ
 	defer request.Body.Close()
 	err := json.NewDecoder(request.Body).Decode(&recipe)
 	if err != nil {
-		log.Println(err)
+		logrus.Error(err)
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	id, err := handler.recipeService.AddRecipe(recipe)
 	if err != nil {
-		log.Println(err)
+		logrus.Error(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -65,7 +66,7 @@ func (handler *RecipeHandler) UpdateRecipe(responseWriter http.ResponseWriter, r
 	defer request.Body.Close()
 	err := json.NewDecoder(request.Body).Decode(&recipe)
 	if err != nil {
-		log.Println(err)
+		logrus.Error(err)
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -73,7 +74,7 @@ func (handler *RecipeHandler) UpdateRecipe(responseWriter http.ResponseWriter, r
 	id := mux.Vars(request)["id"]
 	updated, err := handler.recipeService.UpdateRecipe(id, recipe)
 	if err != nil {
-		log.Println(err)
+		logrus.Error(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -88,7 +89,7 @@ func (handler *RecipeHandler) DeleteRecipe(responseWriter http.ResponseWriter, r
 	strID := vars["id"]
 
 	if err := handler.recipeService.DeleteRecipe(strID); err != nil {
-		log.Println(err)
+		logrus.Error(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -101,14 +102,14 @@ func (handler *RecipeHandler) SearchRecipe(responseWriter http.ResponseWriter, r
 	defer request.Body.Close()
 	err := json.NewDecoder(request.Body).Decode(&search)
 	if err != nil {
-		log.Println(err)
+		logrus.Error(err)
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	results, err := handler.recipeService.SearchRecipe(search)
 	if err != nil {
-		log.Println(err)
+		logrus.Error(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
