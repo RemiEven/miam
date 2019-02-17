@@ -1,11 +1,13 @@
 package datasource
 
 import (
+	"database/sql"
 	"errors"
 	"strings"
 
 	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/model"
+	"github.com/sirupsen/logrus"
 )
 
 // RecipeDao is a recipe dao
@@ -117,12 +119,12 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 
 	result, err := insertStatement.Exec(recipe.Name, recipe.HowTo)
 	if err != nil {
-		transaction.Rollback() // TODO: log if fail to rollback
+		rollback(transaction)
 		return "", err
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		transaction.Rollback() // TODO: log if fail to rollback
+		rollback(transaction)
 		return "", err
 	}
 	recipeID := fromSqliteID(int(id))
@@ -130,7 +132,7 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 	for _, recipeIngredient := range recipe.Ingredients {
 		_, err = dao.recipeIngredientDao.AddRecipeIngredient(transaction, recipeID, recipeIngredient)
 		if err != nil {
-			transaction.Rollback() // TODO: log if fail to rollback
+			rollback(transaction)
 		}
 	}
 
@@ -154,11 +156,11 @@ func (dao *RecipeDao) DeleteRecipe(ID string) error {
 	defer deleteStatement.Close()
 
 	if _, err := deleteStatement.Exec(oid); err != nil {
-		transaction.Rollback() // TODO: log if fail to rollback
+		rollback(transaction)
 		return err
 	}
 	if err = dao.recipeIngredientDao.DeleteRecipeIngredients(transaction, ID); err != nil {
-		transaction.Rollback() // TODO: log if fail to rollback
+		rollback(transaction)
 		return err
 	}
 
@@ -184,28 +186,28 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 	rowsAffected, err := result.RowsAffected()
 	switch {
 	case err != nil:
-		transaction.Rollback() // TODO: log if fail to rollback
+		rollback(transaction)
 		return nil, err
 	case rowsAffected == 0:
-		transaction.Rollback() // TODO: log if fail to rollback
+		rollback(transaction)
 		return nil, common.ErrNotFound
 	}
 
 	currentIngredients, err := dao.recipeIngredientDao.GetRecipeIngredients(recipe.ID)
 	if err != nil {
-		transaction.Rollback() // TODO: log if fail to rollback
+		rollback(transaction)
 		return nil, err
 	}
 	for _, currentIngredient := range currentIngredients {
 		stillThere, newIngredient := containsIngredient(currentIngredient, recipe.Ingredients)
 		if !stillThere {
 			if err = dao.recipeIngredientDao.DeleteRecipeIngredient(transaction, recipe.ID, currentIngredient.ID); err != nil {
-				transaction.Rollback() // TODO: log if fail to rollback
+				rollback(transaction)
 				return nil, err
 			}
 		} else if newIngredient.Quantity != currentIngredient.Quantity {
 			if err = dao.recipeIngredientDao.UpdateRecipeIngredient(transaction, recipe.ID, newIngredient); err != nil {
-				transaction.Rollback() // TODO: log if fail to rollback
+				rollback(transaction)
 				return nil, err
 			}
 
@@ -215,7 +217,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 		if alreadyThere, _ := containsIngredient(newIngredient, currentIngredients); !alreadyThere {
 			ingredientID, err := dao.recipeIngredientDao.AddRecipeIngredient(transaction, recipe.ID, newIngredient)
 			if err != nil {
-				transaction.Rollback() // TODO: log if fail to rollback
+				rollback(transaction)
 				return nil, err
 			}
 			recipe.Ingredients[i].ID = ingredientID
@@ -302,4 +304,10 @@ func (dao *RecipeDao) getRecipeCount() (int, error) {
 		return 0, err
 	}
 	return 0, errors.New("No row after select count SQL request")
+}
+
+func rollback(transaction *sql.Tx) {
+	if err := transaction.Rollback(); err != nil {
+		logrus.Error(err)
+	}
 }
