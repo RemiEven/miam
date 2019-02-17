@@ -43,5 +43,6 @@ func NewContext() (*Context, error) {
 
 // Close cleanly closes the context by releasing any resources it might hold
 func (context *Context) Close() error {
-	return context.holder.Close()
+	context.RecipeSearchDao.Close()
+	return context.holder.Close() // FIXME: better error handling
 }

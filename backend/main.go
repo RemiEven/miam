@@ -65,7 +65,6 @@ func main() {
 	go func() {
 		logrus.WithField("port", port).Info("Will try to start http server")
 		if err := srv.ListenAndServe(); err != nil {
-			logrus.Error(err)
 			if err == http.ErrServerClosed {
 				logrus.Info("Closed http server")
 			} else {

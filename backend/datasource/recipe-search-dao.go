@@ -104,3 +104,9 @@ func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, 
 
 	return ids, int(searchResults.Total), nil
 }
+
+// Close closes the index used to search recipes
+func (dao *RecipeSearchDao) Close() error {
+	logrus.Info("Closing bleve search engine index")
+	return dao.index.Close()
+}
