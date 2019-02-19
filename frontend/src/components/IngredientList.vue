@@ -36,8 +36,8 @@ export default {
     },
     goToAddRecipeForm() {
       this.$router.push({
-        name: "add-recipe-form"
-      });
+        name: 'add-recipe-form',
+      })
     },
   },
 }

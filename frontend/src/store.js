@@ -35,14 +35,22 @@ export default new Vuex.Store({
     setAddedRecipeId(state, {recipeId}) {
       state.addedRecipeId = recipeId
     },
-    setSearchResults(state, {searchResults}) {
-      state.searchResults = searchResults
+    mergeSearchResults(state, {searchResults}) {
+      state.searchResults.total = searchResults.total
+      const currentResults = state.searchResults.firstResults
+      const newResults = searchResults.firstResults
+      state.searchResults.firstResults = [
+        ...currentResults,
+        ...newResults.filter(result => currentResults.every(currentResult => currentResult.id !== result.id))
+      ]
     },
     setSearchTerm(state, {searchTerm}) {
       state.search.searchTerm = searchTerm
     },
     excludeIngredient(state, {id, name}) {
       state.search.excludedIngredients.push({id, name})
+      state.searchResults.firstResults = state.searchResults.firstResults
+          .filter(recipe => recipe.ingredients.every(ingredient => ingredient.id !== id))
     },
     includeIngredient(state, {ingredientId}) {
       state.search.excludedIngredients = state.search.excludedIngredients
@@ -50,6 +58,8 @@ export default new Vuex.Store({
     },
     excludeRecipe(state, {id, name}) {
       state.search.excludedRecipes.push({id, name})
+      state.searchResults.firstResults = state.searchResults.firstResults
+          .filter(recipe => recipe.id !== id)
     },
     includeRecipe(state, {recipeId}) {
       state.search.excludedRecipes = state.search.excludedRecipes
@@ -79,11 +89,27 @@ export default new Vuex.Store({
     async search({state, commit}) {
       const searchRequest = {
         searchTerm: state.search.searchTerm,
-        excludeRecipes: state.search.excludedRecipes.map(excluded => excluded.id),
+        excludedRecipes: state.search.excludedRecipes.map(excluded => excluded.id),
         excludedIngredients: state.search.excludedIngredients.map(excluded => excluded.id),
       }
       const searchResults = await recipeApi.searchRecipe(searchRequest)
-      commit('setSearchResults', {searchResults})
+      commit('mergeSearchResults', {searchResults})
+    },
+    async excludeIngredient({commit, dispatch}, {id, name}) {
+      commit('excludeIngredient', {id, name})
+      dispatch('search')
+    },
+    async includeIngredient({commit, dispatch}, {ingredientId}) {
+      commit('includeIngredient', {ingredientId})
+      dispatch('search')
+    },
+    async excludeRecipe({commit, dispatch}, {id, name}) {
+      commit('excludeRecipe', {id, name})
+      dispatch('search')
+    },
+    async includeRecipe({commit, dispatch}, {recipeId}) {
+      commit('includeRecipe', {recipeId})
+      dispatch('search')
     },
   },
 })

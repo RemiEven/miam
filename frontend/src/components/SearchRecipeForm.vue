@@ -1,20 +1,21 @@
 <template>
   <div>
-  <form onsubmit="return false" class="form-horizontal">
-    <input type="text" id="searchTermInput" name="searchTerm" placeholder="Chercher" autofocus v-model.trim="searchTerm" class="form-group form-input" />
-    <button type="submit" v-on:click="search" class="btn btn-success form-group form-input mi-btn">Chercher</button>
-  </form>
-    <div class="divider text-center" data-content="Ingrédients exclus"></div>
-    <!-- TODO if no ingredient is excluded, state it here -->
-        <span v-for="ingredient in excludedIngredients" :key="ingredient.id" class="chip">
-            {{ingredient.name}}
-            <button class="btn btn-clear" role="button" v-on:click="includeIngredient(ingredient.id)" />
-        </span>
-    <div class="divider text-center" data-content="Recette exclues"></div>
-        <span v-for="recipe in excludedRecipes" :key="recipe.id" class="chip">
-            {{recipe.name}}
-            <button class="btn btn-clear" role="button" v-on:click="includeRecipe(recipe.id)" />
-        </span>
+    <form onsubmit="return false" class="form-horizontal">
+      <div class="input-group">
+        <input type="text" id="searchTermInput" name="searchTerm" placeholder="Chercher" autofocus v-model.trim="searchTerm" class="form-input" />
+        <button type="submit" v-on:click="search" class="input-group-btn btn btn-success"><i class="icon icon-search"></i></button>
+      </div>
+    </form>
+    <div v-if="excludedIngredients.length > 0" class="divider text-center" data-content="Ingrédients exclus"></div>
+    <span v-for="ingredient in excludedIngredients" :key="ingredient.id" v-on:click="includeIngredient(ingredient.id)" class="chip">
+      {{ingredient.name}}
+      <button class="btn btn-clear" role="button" />
+    </span>
+    <div v-if="excludedRecipes.length > 0" class="divider text-center" data-content="Recette exclues"></div>
+    <span v-for="recipe in excludedRecipes" :key="recipe.id" v-on:click="includeRecipe(recipe.id)" class="chip">
+      {{recipe.name}}
+      <button class="btn btn-clear" role="button" />
+    </span>
   </div>
 </template>
 
@@ -39,22 +40,14 @@ export default {
   },
   methods: {
     includeRecipe(recipeId) {
-      this.$store.commit('includeRecipe', {recipeId})
+      this.$store.dispatch('includeRecipe', {recipeId})
     },
     includeIngredient(ingredientId) {
-      this.$store.commit('includeIngredient', {ingredientId})
+      this.$store.dispatch('includeIngredient', {ingredientId})
     },
     search() {
       this.$store.dispatch('search')
     },
   },
 }
-
 </script>
-
-<style scoped>
-.mi-btn {
-  width: 100%;
-  justify-content: center;
-}
-</style>

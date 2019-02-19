@@ -51,7 +51,7 @@ export default {
         name: 'recipe',
         params: {
           id: this.$store.state.addedRecipeId
-        }
+        },
       })
     },
     addIngredientInput() {
