@@ -4,7 +4,7 @@ import Home from './views/Home.vue'
 
 Vue.use(Router)
 
-export default new Router({
+const router = new Router({
   routes: [
     {
       path: '/',
@@ -29,3 +29,9 @@ export default new Router({
   ],
   linkActiveClass: 'active',
 })
+
+router.afterEach(() => {
+  document.activeElement.blur()
+})
+
+export default router

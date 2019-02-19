@@ -1,11 +1,18 @@
 <template>
   <div>
-    <ul v-if="ingredients.length > 0">
-      <li v-for="ingredient in ingredients" :key="ingredient.id" class="chip">
-        {{ingredient.name}}
-        <button type="button" v-on:click="deleteIngredient(ingredient.id)" class="btn btn-clear"></button>
-      </li>
-    </ul>
+    <div v-if="ingredients.length > 0" class="mb-2 mt-2">
+      <div v-for="(ingredient, index) in ingredients" :key="ingredient.id">
+        <div class="tile tile-centered">
+          <div class="tile-content">
+            <div class="tile-title text-bold">{{ingredient.name}}</div>
+          </div>
+          <div class="tile-action">
+            <button type="button" v-on:click="deleteIngredient(ingredient.id)" class="btn btn btn-error btn-action btn-lg"><i class="icon icon-delete"></i></button>
+          </div>
+        </div>
+        <div class="divider" v-if="index !== ingredients.length - 1"></div>
+      </div>
+    </div>
     <div v-else class="column col-12 empty">
       <div class="empty-icon icon-3x icon-resize-horiz icon"></div>
       <p class="empty-title h5">Aucun ingrédient</p>
@@ -33,5 +40,5 @@ export default {
       });
     },
   },
-};
+}
 </script>

@@ -38,13 +38,22 @@ export default new Vuex.Store({
     setSearchResults(state, {searchResults}) {
       state.searchResults = searchResults
     },
-    resetSearch(state) {
-      state.search = {
-        searchTerm: '',
-        excludedRecipes: [],
-        excludedIngredients: [],
-      }
-      state.searchResults = {}
+    setSearchTerm(state, {searchTerm}) {
+      state.search.searchTerm = searchTerm
+    },
+    excludeIngredient(state, {id, name}) {
+      state.search.excludedIngredients.push({id, name})
+    },
+    includeIngredient(state, {ingredientId}) {
+      state.search.excludedIngredients = state.search.excludedIngredients
+          .filter(ingredient => ingredient.id != ingredientId)
+    },
+    excludeRecipe(state, {id, name}) {
+      state.search.excludedRecipes.push({id, name})
+    },
+    includeRecipe(state, {recipeId}) {
+      state.search.excludedRecipes = state.search.excludedRecipes
+          .filter(recipe => recipe.id != recipeId)
     },
   },
   actions: {
@@ -68,7 +77,12 @@ export default new Vuex.Store({
       await recipeApi.deleteRecipe(recipeId)
     },
     async search({state, commit}) {
-      const searchResults = await recipeApi.searchRecipe(state.search)
+      const searchRequest = {
+        searchTerm: state.search.searchTerm,
+        excludeRecipes: state.search.excludedRecipes.map(excluded => excluded.id),
+        excludedIngredients: state.search.excludedIngredients.map(excluded => excluded.id),
+      }
+      const searchResults = await recipeApi.searchRecipe(searchRequest)
       commit('setSearchResults', {searchResults})
     },
   },

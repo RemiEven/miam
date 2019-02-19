@@ -26,10 +26,10 @@ export default {
         }
         return await fetch(`${backend}/recipe/${recipeId}`, request)
     },
-    async searchRecipe() {
+    async searchRecipe(searchRequest) {
         const request = {
             method: 'POST',
-            body: JSON.stringify({}),
+            body: JSON.stringify(searchRequest),
             headers: new Headers({
                 "Content-Type": "application/json:charset=UTF_8",
             }),
