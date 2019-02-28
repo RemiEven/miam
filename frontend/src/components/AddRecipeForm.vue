@@ -4,7 +4,20 @@
     <textarea id="how-to-input" name="how-to" placeholder="Instructions" v-model.trim="howTo" class="form-group form-input" rows="5" />
     <div v-for="ingredient in ingredients" :key="ingredient.localId" class="form-group columns">
       <span class="column col-5">
-        <input type="text" v-bind:id="'ingredientInput' + ingredient.localId" v-bind:name="'ingredient' + ingredient.localId" placeholder="Nom" v-model.trim="ingredient.name" class="form-input" />
+        <div>
+        <!-- TODO: extraire l'ingredient name text input avec la dropdown dans un cmp dédié, et dynamiser le tout. Pas de lien avec vuex, seulement de la communication inter cmp -->
+        <div>
+          <input @blur="console.log('iiii')" @focus="console.log('jjjj')" type="text" v-bind:id="'ingredientInput' + ingredient.localId" v-bind:name="'ingredient' + ingredient.localId" placeholder="Nom" v-model.trim="ingredient.name" class="form-input" />
+        </div>
+        <ul class="menu mi-suggestion-dropdown">
+          <li class="menu-item">
+            eifjie
+          </li>
+          <li class="menu-item">
+            eifjie2
+          </li>
+        </ul>
+        </div>
       </span>
       <span class="column col-5">
         <input type="text" v-bind:id="'quantityInput' + ingredient.localId" v-bind:name="'quantity' + ingredient.localId" placeholder="Quantity" v-model.trim="ingredient.quantity" class="form-input" />
@@ -74,5 +87,9 @@ export default {
 .mi-btn {
   width: 100%;
   justify-content: center;
+}
+
+.mi-suggestion-dropdown {
+  position: absolute;
 }
 </style>

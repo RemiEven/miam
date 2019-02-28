@@ -31,3 +31,5 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 ```bash
 vue ui
 ```
+
+regarder pour trouver ou faire un utilitaire de visualisation de graph de dépendance pour les modules

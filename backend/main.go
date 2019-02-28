@@ -34,7 +34,7 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	defer serviceContext.Close()
+	defer serviceContext.Close() // FIXME: handle error
 
 	recipeHandler := handler.NewRecipeHandler(serviceContext.RecipeService)
 	ingredientHandler := handler.NewIngredientHandler(serviceContext.IngredientService)

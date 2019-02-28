@@ -17,7 +17,7 @@ type RecipeSearchDao struct {
 }
 
 func newRecipeSearchDao() (*RecipeSearchDao, error) {
-	recipeIndex, err := bleve.Open(indexPath)
+	recipeIndex, err := bleve.Open(indexPath) // TODO: test with InMemoryOnly
 	if err == bleve.ErrorIndexPathDoesNotExist {
 		mapping := buildIndexMapping()
 		recipeIndex, err = bleve.New(indexPath, mapping)
