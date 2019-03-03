@@ -28,6 +28,7 @@ export default {
   computed: {
     ingredients() {
       return this.$store.state.allIngredients
+        .sort((s1, s2) => (s1.name > s2.name ? 1 : -1))
     },
   },
   methods: {
