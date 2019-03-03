@@ -4,7 +4,7 @@
       <input @blur="displayDropdown = false" @focus="displayDropdown = true" type="text" placeholder="Nom" v-model.trim="text" class="form-input" />
       <i class="form-icon icon text-gray" v-bind:class="{'icon-bookmark': suggestionSelected, 'icon-plus': !suggestionSelected}"></i>
     </div>
-    <ul v-if="displayDropdown" class="menu mi-suggestion-dropdown">
+    <ul v-if="displayDropdown && filteredSuggestions.length != 0" class="menu mi-suggestion-dropdown">
       <li class="menu-item" v-for="suggestion in filteredSuggestions" v-bind:key="suggestion.id" v-on:click="selectSuggestion(suggestion)">
         {{suggestion.name}}
       </li>
@@ -57,6 +57,7 @@ export default {
         } else {
           this.value.name = text
           this.value.id = ""
+          this.$emit('selection', this.value)
         }
       },
     },
@@ -67,6 +68,7 @@ export default {
   methods: {
     selectSuggestion({id, name}) {
       this.value = {id, name}
+      this.$emit('selection', this.value)
     },
   },
 }

@@ -4,7 +4,7 @@
     <textarea id="how-to-input" name="how-to" placeholder="Instructions" v-model.trim="howTo" class="form-group form-input" rows="5" />
     <div v-for="ingredient in ingredients" :key="ingredient.localId" class="form-group columns">
       <span class="column col-5">
-        <autocomplete v-bind:suggestions="allIngredients" v-model="ingredient.input"></autocomplete>
+        <autocomplete v-bind:suggestions="allIngredients" v-on:selection="ingredient.input = $event"></autocomplete>
       </span>
       <span class="column col-5">
         <input type="text" v-bind:id="'quantityInput' + ingredient.localId" v-bind:name="'quantity' + ingredient.localId" placeholder="Quantity" v-model.trim="ingredient.quantity" class="form-input" />
@@ -23,7 +23,6 @@ import { notBlank } from '@/utils'
 
 import Autocomplete from '@/components/Autocomplete.vue'
 
-// TODO: also handle already existing ingredients with their id
 export default {
   name: 'add-recipe-form',
   components: {
@@ -39,11 +38,14 @@ export default {
   },
   computed: {
     valid() {
-      return notBlank(this.name) && this.ingredients.every(({id, name}) => notBlank(id) || notBlank(name))
+      return notBlank(this.name) && this.ingredients.every(({input: {id, name}}) => notBlank(id) || notBlank(name))
     },
     allIngredients() {
       return this.$store.state.allIngredients
     },
+  },
+  mounted() {
+    this.getIngredients()
   },
   methods: {
     async add() {
@@ -75,6 +77,9 @@ export default {
     removeIngredientInput(ingredientLocalId) {
       this.ingredients = this.ingredients
           .filter(ingredient => ingredient.localId != ingredientLocalId)
+    },
+    getIngredients() {
+      this.$store.dispatch('getAllIngredients')
     },
   }
 }

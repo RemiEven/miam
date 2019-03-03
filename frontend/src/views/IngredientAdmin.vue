@@ -10,7 +10,7 @@ import IngredientList from '@/components/IngredientList.vue'
 export default {
   name: 'ingredient-admin',
   components: {
-    IngredientList
+    IngredientList,
   },
   mounted() {
     this.getIngredients()
@@ -18,7 +18,7 @@ export default {
   methods: {
     getIngredients() {
       this.$store.dispatch('getAllIngredients')
-    }
-  }
+    },
+  },
 }
 </script>
