@@ -1,0 +1,28 @@
+---
+  # TODO: use variables when adequate, setup service with ansible template module if needed, use conditional to avoid unnecessary operations, clean up build dir
+- hosts: raspberry
+  remote_user: pi
+  tasks:
+  - name: Create temporary build directory
+    tempfile:
+      state: directory
+      prefix: "ansible-miam."
+    register: temp_dir
+  - name: Upload miam archive and extract it
+    unarchive:
+      src: ./miam.tar.gz
+      dest: "{{temp_dir.path}}"
+  - name: Stop miam service
+    become: true
+    become_method: sudo
+    service:
+      name: miam
+      state: stopped
+  - name: Replace files
+    command: mv {{temp_dir.path}}/miam /home/pi/miam # This doesn't work
+  - name: Start miam service
+    become: true
+    become_method: sudo
+    service:
+      name: miam
+      state: started
