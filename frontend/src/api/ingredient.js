@@ -1,4 +1,4 @@
-const backend = 'http://localhost:7040' // TODO: put this in config
+const backend = process.env.VUE_APP_API_BASE_URL
 
 export default {
     async getIngredients() {
