@@ -1,0 +1,39 @@
+# --- Build backend
+FROM golang:1.11-stretch as build-backend
+
+RUN apt-get update && apt-get install -y gcc-arm-linux-gnueabi/stable
+
+COPY backend /miam
+WORKDIR /miam
+# Create /miam/main ELF exe
+RUN CC=arm-linux-gnueabi-gcc CGO_ENABLED=1 GOOS=linux GOARCH=arm GOARM=5 go build -v main.go
+
+# --- Build frontend
+FROM node:11.9-alpine as build-frontend
+
+COPY frontend /miam
+WORKDIR /miam
+RUN npm install
+RUN npm run build
+
+# --- Build deployer image
+FROM alpine:3.9
+
+RUN apk --update add --virtual build-dependencies gcc musl-dev libffi-dev openssl-dev python-dev
+RUN apk update && apk upgrade
+RUN apk add --no-cache bash curl tar openssh-client sshpass git python py-boto py-dateutil py-httplib2 py-jinja2 py-paramiko py-pip py-yaml ca-certificates
+RUN pip install --upgrade pip && pip install python-keyczar docker-py && pip install ansible==2.7.8
+RUN apk del build-dependencies
+RUN rm -rf /var/cache/apk/*
+
+ENV ANSIBLE_GATHERING=smart ANSIBLE_HOST_KEY_CHECKING=false ANSIBLE_RETRY_FILES_ENABLED=false ANSIBLE_ROLES_PATH=/ansible/playbooks/roles ANSIBLE_SSH_PIPELINING=True PYTHONPATH=/ansible/lib PATH=/ansible/bin:$PATH ANSIBLE_LIBRARY=/ansible/library
+
+COPY deploy /miam/deploy
+COPY --from=build-backend /miam/main /miam/main
+COPY --from=build-frontend /miam/dist /miam/static
+
+WORKDIR /build
+RUN tar -zcvf miam.tar.gz /miam/main /miam/static /miam/deploy/configuration.json
+RUN chmod 644 miam.tar.gz
+
+ENTRYPOINT [ "ansible-playbook", "-i", "/miam/deploy/hosts.cfg" ]

@@ -1,0 +1,12 @@
+[Unit]
+Description=Miam server service
+After=syslog.target network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/miam
+ExecStart=/home/pi/miam/main
+
+[Install]
+WantedBy=multi-user.target

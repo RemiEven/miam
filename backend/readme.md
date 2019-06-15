@@ -27,3 +27,8 @@ Then scp eg.
 - docker with bare exec
     - seems difficult since we use cgo. alpine is probably the best here
 - lint
+- go 1.12
+
+# See what's going on in the database
+
+sqlitebrowser and boltBrowser can be used
