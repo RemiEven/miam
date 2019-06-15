@@ -14,9 +14,13 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
-const port = 7040
+const (
+	defaultPort        = 7040
+	defaultAllowedHost = "http://localhost:8080"
+)
 
 var (
 	recipeDao *datasource.RecipeDao
@@ -27,14 +31,25 @@ func main() {
 	logrus.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
 	})
-
 	logrus.Info("Starting")
+
+	viper.SetConfigName("configuration")
+	viper.AddConfigPath(".")
+	viper.SetDefault("port", defaultPort)
+	viper.SetDefault("allowedHost", defaultAllowedHost)
+	if err := viper.ReadInConfig(); err != nil {
+		logrus.WithError(err).Fatal("Failed to read configuration file")
+	}
 
 	serviceContext, err := service.NewContext()
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	defer serviceContext.Close() // FIXME: handle error
+	defer func() {
+		if err := serviceContext.Close(); err != nil {
+			logrus.WithError(err).Error("Failed to close context")
+		}
+	}()
 
 	recipeHandler := handler.NewRecipeHandler(serviceContext.RecipeService)
 	ingredientHandler := handler.NewIngredientHandler(serviceContext.IngredientService)
@@ -53,6 +68,8 @@ func main() {
 	router.HandleFunc("/ingredient/{id}", ingredientHandler.DeleteIngredient).Methods(http.MethodDelete)
 
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", handler.SpaHandler{})).Methods(http.MethodGet)
+
+	port := viper.GetInt("port")
 
 	srv := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
@@ -91,7 +108,7 @@ func main() {
 
 func configureCORS(router *mux.Router) {
 	router.Use(handlers.CORS(
-		handlers.AllowedOrigins([]string{"http://localhost:8080"}), // TODO: restrict this based on config
+		handlers.AllowedOrigins([]string{viper.GetString("allowedHost")}),
 		handlers.AllowedMethods([]string{
 			http.MethodOptions,
 			http.MethodGet,
