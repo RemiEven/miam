@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="has-icon-right">
-      <input @blur="displayDropdown = false" @focus="displayDropdown = true" type="text" placeholder="Nom" v-model.trim="text" class="form-input" />
+      <input @blur="hideDropdown" @focus="displayDropdown = true" type="text" placeholder="Nom" v-model.trim="text" class="form-input" />
       <i class="form-icon icon text-gray" v-bind:class="{'icon-bookmark': suggestionSelected, 'icon-plus': !suggestionSelected}"></i>
     </div>
-    <ul v-if="displayDropdown && filteredSuggestions.length != 0" class="menu mi-suggestion-dropdown">
+    <ul v-show="displayDropdown && filteredSuggestions.length != 0" class="menu mi-suggestion-dropdown">
       <li class="menu-item" v-for="suggestion in filteredSuggestions" v-bind:key="suggestion.id" v-on:click="selectSuggestion(suggestion)">
         {{suggestion.name}}
       </li>
@@ -69,6 +69,11 @@ export default {
     selectSuggestion({id, name}) {
       this.value = {id, name}
       this.$emit('selection', this.value)
+    },
+    hideDropdown() {
+      setTimeout(() => {
+        this.displayDropdown = false
+      }, 200) // FIXME: find a cleaner way to do it, (this.$nextTick doesn't work, neither do lower timers)
     },
   },
 }
