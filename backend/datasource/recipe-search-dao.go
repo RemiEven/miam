@@ -1,6 +1,8 @@
 package datasource
 
 import (
+	"fmt"
+
 	"github.com/RemiEven/miam/model"
 	"github.com/blevesearch/bleve"
 	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
@@ -17,14 +19,9 @@ type RecipeSearchDao struct {
 }
 
 func newRecipeSearchDao() (*RecipeSearchDao, error) {
-	recipeIndex, err := bleve.Open(indexPath) // TODO: test with InMemoryOnly
-	if err == bleve.ErrorIndexPathDoesNotExist {
-		mapping := buildIndexMapping()
-		recipeIndex, err = bleve.New(indexPath, mapping)
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
+	mapping := buildIndexMapping()
+	recipeIndex, err := bleve.NewMemOnly(mapping)
+	if err != nil {
 		return nil, err
 	}
 
@@ -94,7 +91,7 @@ func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, 
 
 	searchResults, err := dao.index.Search(bleve.NewSearchRequest(query))
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("search failed: %w", err)
 	}
 
 	ids := make([]string, len(searchResults.Hits))

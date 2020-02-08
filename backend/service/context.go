@@ -22,6 +22,10 @@ func NewContext() (*Context, error) {
 	}, nil
 }
 
+func (context *Context) GetDatasourceContext() *datasource.Context {
+	return context.datasourceContext
+}
+
 // Close cleanly closes the context by releasing any resources it might hold
 func (context *Context) Close() error {
 	return context.datasourceContext.Close()

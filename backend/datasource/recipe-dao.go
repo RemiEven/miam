@@ -67,7 +67,7 @@ func (dao *RecipeDao) GetRecipes(IDs []string) ([]model.Recipe, error) {
 	if len(IDs) == 0 {
 		return make([]model.Recipe, 0), nil
 	}
-	queryParamPlaceholders := "?" + strings.Repeat("?,", len(IDs)-1)
+	queryParamPlaceholders := "?" + strings.Repeat(",?", len(IDs)-1)
 	queryParams := make([]interface{}, len(IDs))
 	var err error
 	for i := range IDs {
@@ -310,4 +310,27 @@ func rollback(transaction *sql.Tx) {
 	if err := transaction.Rollback(); err != nil {
 		logrus.Error(err)
 	}
+}
+
+// StreamRecipeIds returns all recipe ids
+func (dao *RecipeDao) StreamRecipeIds() ([]string, error) {
+	rows, err := dao.holder.db.Query("select id from recipe")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	ids := make([]string, 0)
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, fromSqliteID(id))
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return ids, nil
 }

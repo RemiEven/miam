@@ -51,6 +51,24 @@ func main() {
 		}
 	}()
 
+	ids, err := serviceContext.GetDatasourceContext().RecipeDao.StreamRecipeIds()
+	if err != nil {
+		logrus.WithError(err).Fatal()
+	}
+	for _, id := range ids {
+		recipe, err := serviceContext.GetDatasourceContext().RecipeDao.GetRecipe(id)
+		if err != nil {
+			logrus.WithError(err).Fatal()
+		}
+		if recipe != nil {
+			if err := serviceContext.GetDatasourceContext().RecipeSearchDao.IndexRecipe(*recipe); err != nil {
+				logrus.WithError(err).Fatal()
+			} else {
+				logrus.WithField("id", id).Debug("indexed recipe")
+			}
+		}
+	}
+
 	recipeHandler := handler.NewRecipeHandler(serviceContext.RecipeService)
 	ingredientHandler := handler.NewIngredientHandler(serviceContext.IngredientService)
 

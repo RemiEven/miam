@@ -1,6 +1,8 @@
 package service
 
 import (
+	"fmt"
+
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/model"
 )
@@ -30,7 +32,7 @@ func (service *RecipeService) SearchRecipe(search model.RecipeSearch) (*model.Re
 	}
 	recipes, err := service.recipeDao.GetRecipes(IDs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to hydrate matching recipes: *%w", err)
 	}
 	return &model.RecipeSearchResult{
 		FirstResults: recipes,
