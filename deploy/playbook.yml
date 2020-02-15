@@ -19,7 +19,7 @@
       name: miam
       state: stopped
   - name: Replace executable
-    command: mv {{temp_dir.path}}/miam/main /home/pi/miam/miam
+    command: mv {{temp_dir.path}}/miam/main /home/pi/miam/main
   - name: Remove existing front files
     file:
       path: /home/pi/miam/static

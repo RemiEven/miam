@@ -46,6 +46,7 @@ export default {
       this.$store.dispatch('includeIngredient', {ingredientId})
     },
     search() {
+      this.$store.commit('resetSearchResults')
       this.$store.dispatch('search')
     },
   },

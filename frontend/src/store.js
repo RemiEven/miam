@@ -35,6 +35,10 @@ export default new Vuex.Store({
     setAddedRecipeId(state, {recipeId}) {
       state.addedRecipeId = recipeId
     },
+    resetSearchResults(state) {
+      state.searchResults.total = 0
+      state.searchResults.firstResults = []
+    },
     mergeSearchResults(state, {searchResults}) {
       state.searchResults.total = searchResults.total
       const currentResults = state.searchResults.firstResults

@@ -1,7 +1,7 @@
 # --- Build backend
-FROM golang:1.11-stretch as build-backend
+FROM golang:1.13-stretch as build-backend
 
-RUN apt-get update && apt-get install -y gcc-arm-linux-gnueabi/stable
+RUN apt-get update && apt-get install -y gccgo-arm-linux-gnueabi
 
 COPY backend /miam
 WORKDIR /miam
