@@ -36,17 +36,18 @@ export default new Vuex.Store({
       state.addedRecipeId = recipeId
     },
     resetSearchResults(state) {
-      state.searchResults.total = 0
       state.searchResults.firstResults = []
     },
-    mergeSearchResults(state, {searchResults}) {
-      state.searchResults.total = searchResults.total
-      const currentResults = state.searchResults.firstResults
-      const newResults = searchResults.firstResults
-      state.searchResults.firstResults = [
-        ...currentResults,
-        ...newResults.filter(result => currentResults.every(currentResult => currentResult.id !== result.id))
-      ]
+    setSearchResults(state, {searchResults}) {
+      state.searchResults = searchResults
+    },
+    displayNewRecipe(state) {
+      if (state.searchResults.firstResults.length == 0) {
+        state.recipe = null
+      } else {
+        const recipeIndex = Math.floor(Math.random() * state.searchResults.firstResults.length)
+        state.recipe = state.searchResults.firstResults[recipeIndex]
+      }
     },
     setSearchTerm(state, {searchTerm}) {
       state.search.searchTerm = searchTerm
@@ -90,30 +91,33 @@ export default new Vuex.Store({
     async deleteRecipe(_, {recipeId}) {
       await recipeApi.deleteRecipe(recipeId)
     },
-    async search({state, commit}) {
-      const searchRequest = {
-        searchTerm: state.search.searchTerm,
-        excludedRecipes: state.search.excludedRecipes.map(excluded => excluded.id),
-        excludedIngredients: state.search.excludedIngredients.map(excluded => excluded.id),
+    async displayNewRecipe({state, commit}) {
+      if (state.searchResults.firstResults.length == 0) {
+        const searchRequest = {
+          searchTerm: state.search.searchTerm,
+          excludedRecipes: state.search.excludedRecipes.map(excluded => excluded.id),
+          excludedIngredients: state.search.excludedIngredients.map(excluded => excluded.id),
+        }
+        const searchResults = await recipeApi.searchRecipe(searchRequest)
+        commit('setSearchResults', {searchResults})
       }
-      const searchResults = await recipeApi.searchRecipe(searchRequest)
-      commit('mergeSearchResults', {searchResults})
+      commit('displayNewRecipe')
     },
     async excludeIngredient({commit, dispatch}, {id, name}) {
       commit('excludeIngredient', {id, name})
-      dispatch('search')
+      dispatch('displayNewRecipe')
     },
     async includeIngredient({commit, dispatch}, {ingredientId}) {
       commit('includeIngredient', {ingredientId})
-      dispatch('search')
+      dispatch('displayNewRecipe')
     },
     async excludeRecipe({commit, dispatch}, {id, name}) {
       commit('excludeRecipe', {id, name})
-      dispatch('search')
+      dispatch('displayNewRecipe')
     },
     async includeRecipe({commit, dispatch}, {recipeId}) {
       commit('includeRecipe', {recipeId})
-      dispatch('search')
+      dispatch('displayNewRecipe')
     },
   },
 })

@@ -8,8 +8,11 @@
         {{ingredient.name}} {{ingredient.quantity ? `(${ingredient.quantity})` : ''}}
       </li>
     </ul>
-    <h2>Instructions</h2> <!-- TODO: hide if no instructions -->
-    <div v-html="compiledHowTo" />
+    <span v-if="compiledHowTo == ''" class="text-gray">Pas d'instructions disponibles</span>
+    <div v-else>
+      <h2>Instructions</h2> <!-- TODO: hide if no instructions -->
+      <div v-html="compiledHowTo" />
+    </div>
   </div>
 </template>
 

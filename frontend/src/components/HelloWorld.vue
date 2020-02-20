@@ -3,11 +3,8 @@
     <search-recipe-form></search-recipe-form>
     <div class="divider"></div>
 
-    <div v-if="numberOfResults > 0" class="mb-2 mt-2">
-      <div v-for="(recipe, index) in firstResults" :key="recipe.id">
-       <recipe-tile v-bind:recipe="recipe"></recipe-tile>
-        <div class="divider" v-if="index !== firstResults.length - 1"></div>
-      </div>
+    <div v-if="!!displayedRecipe" class="mb-2 mt-2">
+       <recipe-tile v-bind:recipe="displayedRecipe"></recipe-tile>
     </div>
     <div v-else class="column col-12 empty">
       <div class="empty-icon icon-3x icon-resize-horiz icon"></div>
@@ -28,15 +25,12 @@ export default {
     RecipeTile,
   },
   computed: {
-    numberOfResults() {
-      return this.$store.state.searchResults.total
+    displayedRecipe() {
+      return this.$store.state.recipe
     },
     searching() {
       const search = this.$store.state.search
       return search.searchTerm || search.excludedRecipes.length || search.excludedIngredients.length
-    },
-    firstResults() {
-      return this.$store.state.searchResults.firstResults
     },
   },
   methods: {
@@ -47,7 +41,7 @@ export default {
     },
   },
   mounted() {
-    this.$store.dispatch('search')
+    this.$store.dispatch('displayNewRecipe')
   },
 }
 </script>

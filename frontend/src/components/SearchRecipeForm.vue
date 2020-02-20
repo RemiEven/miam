@@ -11,7 +11,7 @@
       {{ingredient.name}}
       <button class="btn btn-clear" role="button" />
     </span>
-    <div v-if="excludedRecipes.length > 0" class="divider text-center" data-content="Recette exclues"></div>
+    <div v-if="excludedRecipes.length > 0" class="divider text-center" data-content="Recettes exclues"></div>
     <span v-for="recipe in excludedRecipes" :key="recipe.id" v-on:click="includeRecipe(recipe.id)" class="chip">
       {{recipe.name}}
       <button class="btn btn-clear" role="button" />
@@ -47,7 +47,7 @@ export default {
     },
     search() {
       this.$store.commit('resetSearchResults')
-      this.$store.dispatch('search')
+      this.$store.dispatch('displayNewRecipe')
     },
   },
 }
