@@ -17,10 +17,9 @@ import (
 	"github.com/spf13/viper"
 )
 
-const (
-	defaultPort        = 7040
-	defaultAllowedHost = "http://localhost:8080"
-)
+const defaultPort = 7040
+
+var defaultAllowedHosts = []string{"http://localhost:8080"}
 
 var (
 	recipeDao *datasource.RecipeDao
@@ -36,7 +35,7 @@ func main() {
 	viper.SetConfigName("configuration")
 	viper.AddConfigPath(".")
 	viper.SetDefault("port", defaultPort)
-	viper.SetDefault("allowedHost", defaultAllowedHost)
+	viper.SetDefault("allowedHosts", defaultAllowedHosts)
 	if err := viper.ReadInConfig(); err != nil {
 		logrus.WithError(err).Fatal("Failed to read configuration file")
 	}
@@ -126,7 +125,7 @@ func main() {
 
 func configureCORS(router *mux.Router) {
 	router.Use(handlers.CORS(
-		handlers.AllowedOrigins([]string{viper.GetString("allowedHost")}),
+		handlers.AllowedOrigins(viper.GetStringSlice("allowedHosts")),
 		handlers.AllowedMethods([]string{
 			http.MethodOptions,
 			http.MethodGet,
