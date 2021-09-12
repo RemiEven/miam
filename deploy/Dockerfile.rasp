@@ -1,5 +1,5 @@
 # --- Build backend
-FROM golang:1.13-stretch as build-backend
+FROM golang:1.17-stretch as build-backend
 
 RUN apt-get update && apt-get install -y gccgo-arm-linux-gnueabi
 

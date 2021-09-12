@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	"github.com/RemiEven/miam/model"
-	"github.com/blevesearch/bleve"
-	"github.com/blevesearch/bleve/analysis/analyzer/keyword"
-	"github.com/blevesearch/bleve/analysis/lang/fr"
-	"github.com/blevesearch/bleve/mapping"
+	"github.com/blevesearch/bleve/v2"
+	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
+	"github.com/blevesearch/bleve/v2/analysis/lang/fr"
+	"github.com/blevesearch/bleve/v2/mapping"
 	"github.com/sirupsen/logrus"
 )
 
