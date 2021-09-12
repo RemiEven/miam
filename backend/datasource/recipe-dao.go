@@ -40,7 +40,7 @@ func (dao *RecipeDao) GetRecipe(ID string) (*model.Recipe, error) {
 	defer rows.Close()
 	if rows.Next() {
 		var name, howTo string
-		if err = rows.Scan(&name, &howTo); err != nil {
+		if err := rows.Scan(&name, &howTo); err != nil {
 			return nil, err
 		}
 		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ID)
