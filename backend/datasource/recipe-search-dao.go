@@ -8,7 +8,7 @@ import (
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/v2/analysis/lang/fr"
 	"github.com/blevesearch/bleve/v2/mapping"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 const indexPath = "miam.bleve"
@@ -104,6 +104,6 @@ func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, 
 
 // Close closes the index used to search recipes
 func (dao *RecipeSearchDao) Close() error {
-	logrus.Info("Closing bleve search engine index")
+	log.Info().Msg("closing bleve search engine index")
 	return dao.index.Close()
 }

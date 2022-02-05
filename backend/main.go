@@ -8,62 +8,50 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/handler"
 	"github.com/RemiEven/miam/service"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/pkgerrors"
 )
 
 const defaultPort = 7040
 
 var defaultAllowedHosts = []string{"http://localhost:8080"}
 
-var (
-	recipeDao *datasource.RecipeDao
-)
-
 func main() {
-	logrus.SetOutput(os.Stdout)
-	logrus.SetFormatter(&logrus.TextFormatter{
-		FullTimestamp: true,
-	})
-	logrus.Info("Starting")
-
-	viper.SetConfigName("configuration")
-	viper.AddConfigPath(".")
-	viper.SetDefault("port", defaultPort)
-	viper.SetDefault("allowedHosts", defaultAllowedHosts)
-	if err := viper.ReadInConfig(); err != nil {
-		logrus.WithError(err).Fatal("Failed to read configuration file")
-	}
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
+	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	log.Info().Msg("Starting")
 
 	serviceContext, err := service.NewContext()
 	if err != nil {
-		logrus.Fatal(err)
+		log.Fatal().Err(err).Msg("execution failed")
 	}
 	defer func() {
 		if err := serviceContext.Close(); err != nil {
-			logrus.WithError(err).Error("Failed to close context")
+			log.Error().Err(err).Msg("failed to close context")
 		}
 	}()
 
 	ids, err := serviceContext.GetDatasourceContext().RecipeDao.StreamRecipeIds()
 	if err != nil {
-		logrus.WithError(err).Fatal()
+		log.Fatal().Err(err).Msg("execution failed")
 	}
 	for _, id := range ids {
 		recipe, err := serviceContext.GetDatasourceContext().RecipeDao.GetRecipe(id)
 		if err != nil {
-			logrus.WithError(err).Fatal()
+			log.Fatal().Err(err).Msg("execution failed")
 		}
 		if recipe != nil {
 			if err := serviceContext.GetDatasourceContext().RecipeSearchDao.IndexRecipe(*recipe); err != nil {
-				logrus.WithError(err).Fatal()
+				log.Fatal().Err(err).Msg("execution failed")
 			} else {
-				logrus.WithField("id", id).Debug("indexed recipe")
+				log.Debug().Str("id", id).Msg("indexed recipe")
 			}
 		}
 	}
@@ -86,7 +74,7 @@ func main() {
 
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", handler.SpaHandler{})).Methods(http.MethodGet)
 
-	port := viper.GetInt("port")
+	port := defaultPort
 
 	srv := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
@@ -97,12 +85,12 @@ func main() {
 	}
 
 	go func() {
-		logrus.WithField("port", port).Info("Will try to start http server")
+		log.Info().Int("port", port).Msg("will try to start http server")
 		if err := srv.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
-				logrus.Info("Closed http server")
+				log.Info().Msg("closed http server")
 			} else {
-				logrus.Error(err)
+				log.Error().Err(err)
 				serviceContext.Close()
 				os.Exit(1)
 			}
@@ -120,12 +108,12 @@ func main() {
 
 	srv.Shutdown(context)
 
-	logrus.Info("Shutting down")
+	log.Info().Msg("shutting down")
 }
 
 func configureCORS(router *mux.Router) {
 	router.Use(handlers.CORS(
-		handlers.AllowedOrigins(viper.GetStringSlice("allowedHosts")),
+		handlers.AllowedOrigins(defaultAllowedHosts),
 		handlers.AllowedMethods([]string{
 			http.MethodOptions,
 			http.MethodGet,

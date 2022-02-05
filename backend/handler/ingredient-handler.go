@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
+
 	"github.com/RemiEven/miam/model"
 	"github.com/RemiEven/miam/service"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
 )
 
 // IngredientHandler is an ingredient handler
@@ -26,7 +27,7 @@ func NewIngredientHandler(ingredientService *service.IngredientService) *Ingredi
 func (handler *IngredientHandler) GetIngredients(responseWriter http.ResponseWriter, request *http.Request) {
 	ingredients, err := handler.ingredientService.GetAllIngredients()
 	if err != nil {
-		logrus.Error(err)
+		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -40,7 +41,7 @@ func (handler *IngredientHandler) UpdateIngredient(responseWriter http.ResponseW
 	defer request.Body.Close()
 	err := json.NewDecoder(request.Body).Decode(&baseIngredient)
 	if err != nil {
-		logrus.Error(err)
+		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -48,7 +49,7 @@ func (handler *IngredientHandler) UpdateIngredient(responseWriter http.ResponseW
 	vars := mux.Vars(request)
 	ingredient, err := handler.ingredientService.UpdateIngredient(vars["id"], baseIngredient)
 	if err != nil {
-		logrus.Error(err)
+		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -60,7 +61,7 @@ func (handler *IngredientHandler) UpdateIngredient(responseWriter http.ResponseW
 func (handler *IngredientHandler) DeleteIngredient(responseWriter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 	if err := handler.ingredientService.DeleteIngredient(vars["id"]); err != nil {
-		logrus.Error(err)
+		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}

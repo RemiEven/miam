@@ -4,7 +4,7 @@ import (
 	"database/sql"
 
 	_ "github.com/mattn/go-sqlite3" // Necessary to load sqlite3 driver
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 // databaseHolder holds a database connection
@@ -23,6 +23,6 @@ func newDatabaseHolder() (*databaseHolder, error) {
 
 // Close closes the connection to the database
 func (holder *databaseHolder) Close() error {
-	logrus.Info("Closing sqlite database connection")
+	log.Info().Msg("closing sqlite database connection")
 	return holder.db.Close()
 }

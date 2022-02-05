@@ -7,7 +7,7 @@ import (
 
 	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/model"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 // RecipeDao is a recipe dao
@@ -303,12 +303,12 @@ func (dao *RecipeDao) getRecipeCount() (int, error) {
 	} else if err := rows.Err(); err != nil {
 		return 0, err
 	}
-	return 0, errors.New("No row after select count SQL request")
+	return 0, errors.New("no row after select count SQL request")
 }
 
 func rollback(transaction *sql.Tx) {
 	if err := transaction.Rollback(); err != nil {
-		logrus.Error(err)
+		log.Error().Err(err).Msg("")
 	}
 }
 

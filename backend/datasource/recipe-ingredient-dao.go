@@ -121,7 +121,7 @@ func (dao *RecipeIngredientDao) IsUsedInRecipe(ingredientID string) (bool, error
 	} else if err := rows.Err(); err != nil {
 		return false, err
 	}
-	return false, fmt.Errorf("Fail to query for recipes using ingredient [%s]", ingredientID)
+	return false, fmt.Errorf("fail to query for recipes using ingredient [%s]", ingredientID)
 }
 
 // DeleteRecipeIngredients deletes the ingredients of a recipe
