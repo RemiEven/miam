@@ -3,15 +3,14 @@ package datasource
 import (
 	"fmt"
 
-	"github.com/RemiEven/miam/model"
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/v2/analysis/lang/fr"
 	"github.com/blevesearch/bleve/v2/mapping"
 	"github.com/rs/zerolog/log"
-)
 
-const indexPath = "miam.bleve"
+	"github.com/RemiEven/miam/model"
+)
 
 // RecipeSearchDao struct
 type RecipeSearchDao struct {

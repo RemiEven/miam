@@ -25,9 +25,8 @@ Then scp eg.
 - version via build and -ldflag
 - cross-compiling dans image
 - docker with bare exec
-    - seems difficult since we use cgo. alpine is probably the best here
+    - seems difficult since we use cgo. distroless is probably the best here
 - lint
-- go 1.12
 
 # See what's going on in the database
 

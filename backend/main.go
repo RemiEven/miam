@@ -8,13 +8,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/RemiEven/miam/handler"
-	"github.com/RemiEven/miam/service"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
+
+	"github.com/RemiEven/miam/handler"
+	"github.com/RemiEven/miam/service"
 )
 
 const defaultPort = 7040
@@ -22,6 +23,18 @@ const defaultPort = 7040
 var defaultAllowedHosts = []string{"http://localhost:8080"}
 
 func main() {
+	for _, err := range startApplication() {
+		log.Error().Err(err).Msg("execution failed")
+	}
+}
+
+func startApplication() (errors []error) {
+	appendError := func(err error) {
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
@@ -30,29 +43,30 @@ func main() {
 
 	serviceContext, err := service.NewContext()
 	if err != nil {
-		log.Fatal().Err(err).Msg("execution failed")
+		appendError(err)
+		return
 	}
-	defer func() {
-		if err := serviceContext.Close(); err != nil {
-			log.Error().Err(err).Msg("failed to close context")
-		}
-	}()
+	defer func() { appendError(serviceContext.Close()) }()
 
 	ids, err := serviceContext.GetDatasourceContext().RecipeDao.StreamRecipeIds()
 	if err != nil {
-		log.Fatal().Err(err).Msg("execution failed")
+		appendError(err)
+		return
 	}
 	for _, id := range ids {
 		recipe, err := serviceContext.GetDatasourceContext().RecipeDao.GetRecipe(id)
 		if err != nil {
-			log.Fatal().Err(err).Msg("execution failed")
+			appendError(err)
+			return
 		}
-		if recipe != nil {
-			if err := serviceContext.GetDatasourceContext().RecipeSearchDao.IndexRecipe(*recipe); err != nil {
-				log.Fatal().Err(err).Msg("execution failed")
-			} else {
-				log.Debug().Str("id", id).Msg("indexed recipe")
-			}
+		if recipe == nil {
+			continue
+		}
+		if err := serviceContext.GetDatasourceContext().RecipeSearchDao.IndexRecipe(*recipe); err != nil {
+			appendError(err)
+			return
+		} else {
+			log.Debug().Str("id", id).Msg("indexed recipe")
 		}
 	}
 
@@ -102,13 +116,15 @@ func main() {
 
 	<-c
 
-	var wait = time.Second * 15
-	context, cancel := context.WithTimeout(context.Background(), wait)
+	wait := time.Second * 15
+	ctx, cancel := context.WithTimeout(context.Background(), wait)
 	defer cancel()
 
-	srv.Shutdown(context)
+	srv.Shutdown(ctx)
 
 	log.Info().Msg("shutting down")
+
+	return
 }
 
 func configureCORS(router *mux.Router) {
