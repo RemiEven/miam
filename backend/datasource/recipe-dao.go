@@ -1,6 +1,7 @@
 package datasource
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"strings"
@@ -28,12 +29,12 @@ func newRecipeDao(holder *databaseHolder, recipeIngredientDao *RecipeIngredientD
 }
 
 // GetRecipe returns the recipe with the given ID or nil
-func (dao *RecipeDao) GetRecipe(ID string) (*model.Recipe, error) {
+func (dao *RecipeDao) GetRecipe(ctx context.Context, ID string) (*model.Recipe, error) {
 	oid, err := toSqliteID(ID)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := dao.holder.db.Query("select name, how_to from recipe where id=?", oid)
+	rows, err := dao.holder.db.QueryContext(ctx, "select name, how_to from recipe where id=?", oid)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +44,7 @@ func (dao *RecipeDao) GetRecipe(ID string) (*model.Recipe, error) {
 		if err := rows.Scan(&name, &howTo); err != nil {
 			return nil, err
 		}
-		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ID)
+		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ctx, ID)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +64,7 @@ func (dao *RecipeDao) GetRecipe(ID string) (*model.Recipe, error) {
 }
 
 // GetRecipes returns the recipes with the given IDs or an empty slice
-func (dao *RecipeDao) GetRecipes(IDs []string) ([]model.Recipe, error) {
+func (dao *RecipeDao) GetRecipes(ctx context.Context, IDs []string) ([]model.Recipe, error) {
 	if len(IDs) == 0 {
 		return make([]model.Recipe, 0), nil
 	}
@@ -75,7 +76,7 @@ func (dao *RecipeDao) GetRecipes(IDs []string) ([]model.Recipe, error) {
 			return nil, err
 		}
 	}
-	rows, err := dao.holder.db.Query("select id, name, how_to from recipe where id in ("+queryParamPlaceholders+")", queryParams...)
+	rows, err := dao.holder.db.QueryContext(ctx, "select id, name, how_to from recipe where id in ("+queryParamPlaceholders+")", queryParams...)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +89,7 @@ func (dao *RecipeDao) GetRecipes(IDs []string) ([]model.Recipe, error) {
 			return nil, err
 		}
 		recipeID := fromSqliteID(id)
-		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(recipeID)
+		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ctx, recipeID)
 		if err != nil {
 			return nil, err
 		}
@@ -106,18 +107,18 @@ func (dao *RecipeDao) GetRecipes(IDs []string) ([]model.Recipe, error) {
 }
 
 // AddRecipe adds the given recipe
-func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
+func (dao *RecipeDao) AddRecipe(ctx context.Context, recipe *model.BaseRecipe) (string, error) {
 	transaction, err := dao.holder.db.Begin()
 	if err != nil {
 		return "", err
 	}
-	insertStatement, err := transaction.Prepare("insert into recipe(name, how_to) values (?, ?)")
+	insertStatement, err := transaction.PrepareContext(ctx, "insert into recipe(name, how_to) values (?, ?)")
 	if err != nil {
 		return "", err
 	}
 	defer insertStatement.Close()
 
-	result, err := insertStatement.Exec(recipe.Name, recipe.HowTo)
+	result, err := insertStatement.ExecContext(ctx, recipe.Name, recipe.HowTo)
 	if err != nil {
 		rollback(transaction)
 		return "", err
@@ -130,7 +131,7 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 	recipeID := fromSqliteID(int(id))
 
 	for _, recipeIngredient := range recipe.Ingredients {
-		_, err = dao.recipeIngredientDao.AddRecipeIngredient(transaction, recipeID, recipeIngredient)
+		_, err = dao.recipeIngredientDao.AddRecipeIngredient(ctx, transaction, recipeID, recipeIngredient)
 		if err != nil {
 			rollback(transaction)
 		}
@@ -140,7 +141,7 @@ func (dao *RecipeDao) AddRecipe(recipe *model.BaseRecipe) (string, error) {
 }
 
 // DeleteRecipe deletes a recipe and its ingredients
-func (dao *RecipeDao) DeleteRecipe(ID string) error {
+func (dao *RecipeDao) DeleteRecipe(ctx context.Context, ID string) error {
 	oid, err := toSqliteID(ID)
 	if err != nil {
 		return err
@@ -149,17 +150,17 @@ func (dao *RecipeDao) DeleteRecipe(ID string) error {
 	if err != nil {
 		return err
 	}
-	deleteStatement, err := transaction.Prepare("delete from recipe where id=?")
+	deleteStatement, err := transaction.PrepareContext(ctx, "delete from recipe where id=?")
 	if err != nil {
 		return err
 	}
 	defer deleteStatement.Close()
 
-	if _, err := deleteStatement.Exec(oid); err != nil {
+	if _, err := deleteStatement.ExecContext(ctx, oid); err != nil {
 		rollback(transaction)
 		return err
 	}
-	if err = dao.recipeIngredientDao.DeleteRecipeIngredients(transaction, ID); err != nil {
+	if err = dao.recipeIngredientDao.DeleteRecipeIngredients(ctx, transaction, ID); err != nil {
 		rollback(transaction)
 		return err
 	}
@@ -168,17 +169,17 @@ func (dao *RecipeDao) DeleteRecipe(ID string) error {
 }
 
 // UpdateRecipe updates a recipe
-func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
+func (dao *RecipeDao) UpdateRecipe(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
 	transaction, err := dao.holder.db.Begin()
 	if err != nil {
 		return nil, err
 	}
-	updateStatement, err := transaction.Prepare("update recipe set (name, how_to) = (?2, ?3) where id=?1")
+	updateStatement, err := transaction.PrepareContext(ctx, "update recipe set (name, how_to) = (?2, ?3) where id=?1")
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := updateStatement.Exec(recipe.ID, recipe.Name, recipe.HowTo)
+	result, err := updateStatement.ExecContext(ctx, recipe.ID, recipe.Name, recipe.HowTo)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +194,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 		return nil, common.ErrNotFound
 	}
 
-	currentIngredients, err := dao.recipeIngredientDao.GetRecipeIngredients(recipe.ID)
+	currentIngredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ctx, recipe.ID)
 	if err != nil {
 		rollback(transaction)
 		return nil, err
@@ -201,12 +202,12 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 	for _, currentIngredient := range currentIngredients {
 		stillThere, newIngredient := containsIngredient(currentIngredient, recipe.Ingredients)
 		if !stillThere {
-			if err = dao.recipeIngredientDao.DeleteRecipeIngredient(transaction, recipe.ID, currentIngredient.ID); err != nil {
+			if err = dao.recipeIngredientDao.DeleteRecipeIngredient(ctx, transaction, recipe.ID, currentIngredient.ID); err != nil {
 				rollback(transaction)
 				return nil, err
 			}
 		} else if newIngredient.Quantity != currentIngredient.Quantity {
-			if err = dao.recipeIngredientDao.UpdateRecipeIngredient(transaction, recipe.ID, newIngredient); err != nil {
+			if err = dao.recipeIngredientDao.UpdateRecipeIngredient(ctx, transaction, recipe.ID, newIngredient); err != nil {
 				rollback(transaction)
 				return nil, err
 			}
@@ -215,7 +216,7 @@ func (dao *RecipeDao) UpdateRecipe(recipe model.Recipe) (*model.Recipe, error) {
 	}
 	for i, newIngredient := range recipe.Ingredients {
 		if alreadyThere, _ := containsIngredient(newIngredient, currentIngredients); !alreadyThere {
-			ingredientID, err := dao.recipeIngredientDao.AddRecipeIngredient(transaction, recipe.ID, newIngredient)
+			ingredientID, err := dao.recipeIngredientDao.AddRecipeIngredient(ctx, transaction, recipe.ID, newIngredient)
 			if err != nil {
 				rollback(transaction)
 				return nil, err
@@ -239,12 +240,12 @@ func containsIngredient(searched model.RecipeIngredient, ingredients []model.Rec
 }
 
 // GetRandomRecipes search for recipes according to given search criteria
-func (dao *RecipeDao) GetRandomRecipes(search model.RecipeSearch) (*model.RecipeSearchResult, error) {
-	results, err := dao.getRandomRecipes(10) // 10 is arbitrary FIXME: set this at the handler level
+func (dao *RecipeDao) GetRandomRecipes(ctx context.Context, search model.RecipeSearch) (*model.RecipeSearchResult, error) {
+	results, err := dao.getRandomRecipes(ctx, 10) // 10 is arbitrary FIXME: set this at the handler level
 	if err != nil {
 		return nil, err
 	}
-	total, err := dao.getRecipeCount()
+	total, err := dao.getRecipeCount(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -256,8 +257,8 @@ func (dao *RecipeDao) GetRandomRecipes(search model.RecipeSearch) (*model.Recipe
 }
 
 // getRandomRecipes returns a given number of randomly selected recipes
-func (dao *RecipeDao) getRandomRecipes(numberWanted int) ([]model.Recipe, error) {
-	rows, err := dao.holder.db.Query("select id, name, how_to from recipe where id in (select id from recipe order by random() limit ?)", numberWanted)
+func (dao *RecipeDao) getRandomRecipes(ctx context.Context, numberWanted int) ([]model.Recipe, error) {
+	rows, err := dao.holder.db.QueryContext(ctx, "select id, name, how_to from recipe where id in (select id from recipe order by random() limit ?)", numberWanted)
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +271,7 @@ func (dao *RecipeDao) getRandomRecipes(numberWanted int) ([]model.Recipe, error)
 			return nil, err
 		}
 		recipeID := fromSqliteID(id)
-		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(recipeID)
+		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ctx, recipeID)
 		if err != nil {
 			return nil, err
 		}
@@ -288,8 +289,8 @@ func (dao *RecipeDao) getRandomRecipes(numberWanted int) ([]model.Recipe, error)
 }
 
 // getRecipeCount returns the number of saved recipes
-func (dao *RecipeDao) getRecipeCount() (int, error) {
-	rows, err := dao.holder.db.Query("select count(*) from recipe")
+func (dao *RecipeDao) getRecipeCount(ctx context.Context) (int, error) {
+	rows, err := dao.holder.db.QueryContext(ctx, "select count(*) from recipe")
 	if err != nil {
 		return 0, err
 	}
@@ -313,8 +314,8 @@ func rollback(transaction *sql.Tx) {
 }
 
 // StreamRecipeIds returns all recipe ids
-func (dao *RecipeDao) StreamRecipeIds() ([]string, error) {
-	rows, err := dao.holder.db.Query("select id from recipe")
+func (dao *RecipeDao) StreamRecipeIds(ctx context.Context) ([]string, error) {
+	rows, err := dao.holder.db.QueryContext(ctx, "select id from recipe")
 	if err != nil {
 		return nil, err
 	}

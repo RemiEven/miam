@@ -25,7 +25,7 @@ func NewIngredientHandler(ingredientService *service.IngredientService) *Ingredi
 
 // GetIngredients returns all known ingredients
 func (handler *IngredientHandler) GetIngredients(responseWriter http.ResponseWriter, request *http.Request) {
-	ingredients, err := handler.ingredientService.GetAllIngredients()
+	ingredients, err := handler.ingredientService.GetAllIngredients(request.Context())
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -47,7 +47,7 @@ func (handler *IngredientHandler) UpdateIngredient(responseWriter http.ResponseW
 	}
 
 	vars := mux.Vars(request)
-	ingredient, err := handler.ingredientService.UpdateIngredient(vars["id"], baseIngredient)
+	ingredient, err := handler.ingredientService.UpdateIngredient(request.Context(), vars["id"], baseIngredient)
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -60,7 +60,7 @@ func (handler *IngredientHandler) UpdateIngredient(responseWriter http.ResponseW
 // DeleteIngredient deletes the ingredient with the given id
 func (handler *IngredientHandler) DeleteIngredient(responseWriter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
-	if err := handler.ingredientService.DeleteIngredient(vars["id"]); err != nil {
+	if err := handler.ingredientService.DeleteIngredient(request.Context(), vars["id"]); err != nil {
 		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return

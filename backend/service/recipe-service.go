@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/RemiEven/miam/datasource"
@@ -22,15 +23,15 @@ func newRecipeService(recipeDao *datasource.RecipeDao, searchDao *datasource.Rec
 }
 
 // SearchRecipe searches for recipes
-func (service *RecipeService) SearchRecipe(search model.RecipeSearch) (*model.RecipeSearchResult, error) {
+func (service *RecipeService) SearchRecipe(ctx context.Context, search model.RecipeSearch) (*model.RecipeSearchResult, error) {
 	if search.IsEmpty() {
-		return service.recipeDao.GetRandomRecipes(search)
+		return service.recipeDao.GetRandomRecipes(ctx, search)
 	}
 	IDs, total, err := service.searchDao.SearchRecipes(search)
 	if err != nil {
 		return nil, err
 	}
-	recipes, err := service.recipeDao.GetRecipes(IDs)
+	recipes, err := service.recipeDao.GetRecipes(ctx, IDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hydrate matching recipes: *%w", err)
 	}
@@ -41,17 +42,17 @@ func (service *RecipeService) SearchRecipe(search model.RecipeSearch) (*model.Re
 }
 
 // GetRecipe gets a recipe by its ID
-func (service *RecipeService) GetRecipe(ID string) (*model.Recipe, error) {
-	return service.recipeDao.GetRecipe(ID)
+func (service *RecipeService) GetRecipe(ctx context.Context, ID string) (*model.Recipe, error) {
+	return service.recipeDao.GetRecipe(ctx, ID)
 }
 
 // AddRecipe adds a new recipe
-func (service *RecipeService) AddRecipe(recipe model.BaseRecipe) (string, error) {
-	id, err := service.recipeDao.AddRecipe(&recipe)
+func (service *RecipeService) AddRecipe(ctx context.Context, recipe model.BaseRecipe) (string, error) {
+	id, err := service.recipeDao.AddRecipe(ctx, &recipe)
 	if err != nil {
 		return "", err
 	}
-	addedRecipe, err := service.recipeDao.GetRecipe(id)
+	addedRecipe, err := service.recipeDao.GetRecipe(ctx, id)
 	if err != nil {
 		return "", err
 	}
@@ -62,8 +63,8 @@ func (service *RecipeService) AddRecipe(recipe model.BaseRecipe) (string, error)
 }
 
 // UpdateRecipe updates an existing recipe
-func (service *RecipeService) UpdateRecipe(ID string, recipe model.BaseRecipe) (*model.Recipe, error) {
-	updated, err := service.recipeDao.UpdateRecipe(model.Recipe{
+func (service *RecipeService) UpdateRecipe(ctx context.Context, ID string, recipe model.BaseRecipe) (*model.Recipe, error) {
+	updated, err := service.recipeDao.UpdateRecipe(ctx, model.Recipe{
 		ID:         ID,
 		BaseRecipe: recipe,
 	})
@@ -77,8 +78,8 @@ func (service *RecipeService) UpdateRecipe(ID string, recipe model.BaseRecipe) (
 }
 
 // DeleteRecipe deletes a recipe
-func (service *RecipeService) DeleteRecipe(id string) error {
-	if err := service.recipeDao.DeleteRecipe(id); err != nil {
+func (service *RecipeService) DeleteRecipe(ctx context.Context, id string) error {
+	if err := service.recipeDao.DeleteRecipe(ctx, id); err != nil {
 		return err
 	}
 	return service.searchDao.DeleteRecipe(id)

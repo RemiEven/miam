@@ -1,6 +1,7 @@
 package datasource
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/RemiEven/miam/common"
@@ -23,12 +24,12 @@ func newIngredientDao(holder *databaseHolder) (*IngredientDao, error) {
 }
 
 // GetIngredient returns the ingredient with the given ID or nil
-func (dao *IngredientDao) GetIngredient(ID string) (*model.Ingredient, error) {
+func (dao *IngredientDao) GetIngredient(ctx context.Context, ID string) (*model.Ingredient, error) {
 	oid, err := toSqliteID(ID)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := dao.holder.db.Query("select name from ingredient where id=?", oid)
+	rows, err := dao.holder.db.QueryContext(ctx, "select name from ingredient where id=?", oid)
 	if err != nil {
 		return nil, err
 	}
@@ -51,14 +52,14 @@ func (dao *IngredientDao) GetIngredient(ID string) (*model.Ingredient, error) {
 }
 
 // AddIngredient adds a new ingredient
-func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (string, error) {
-	insertStatement, err := transaction.Prepare("insert into ingredient(name) values(?)")
+func (dao *IngredientDao) AddIngredient(ctx context.Context, transaction *sql.Tx, name string) (string, error) {
+	insertStatement, err := transaction.PrepareContext(ctx, "insert into ingredient(name) values(?)")
 	if err != nil {
 		return "", err
 	}
 	defer insertStatement.Close()
 
-	result, err := insertStatement.Exec(name)
+	result, err := insertStatement.ExecContext(ctx, name)
 	if err != nil {
 		return "", err
 	}
@@ -72,30 +73,30 @@ func (dao *IngredientDao) AddIngredient(transaction *sql.Tx, name string) (strin
 
 // DeleteIngredient delete the ingredient with the given id if present.
 // It is up to the caller to ensure no recipe uses the ingredient.
-func (dao *IngredientDao) DeleteIngredient(ID string) error {
+func (dao *IngredientDao) DeleteIngredient(ctx context.Context, ID string) error {
 	oid, err := toSqliteID(ID)
 	if err != nil {
 		return err
 	}
-	deleteStatement, err := dao.holder.db.Prepare("delete from ingredient where id=?")
+	deleteStatement, err := dao.holder.db.PrepareContext(ctx, "delete from ingredient where id=?")
 	if err != nil {
 		return err
 	}
 	defer deleteStatement.Close()
 
-	_, err = deleteStatement.Exec(oid)
+	_, err = deleteStatement.ExecContext(ctx, oid)
 	return err
 }
 
 // UpdateIngredient updates the name of an ingredient
-func (dao *IngredientDao) UpdateIngredient(ingredient model.Ingredient) error {
-	updateStatement, err := dao.holder.db.Prepare("update ingredient set name=?2 where id=?1")
+func (dao *IngredientDao) UpdateIngredient(ctx context.Context, ingredient model.Ingredient) error {
+	updateStatement, err := dao.holder.db.PrepareContext(ctx, "update ingredient set name=?2 where id=?1")
 	if err != nil {
 		return err
 	}
 	defer updateStatement.Close()
 
-	result, err := updateStatement.Exec(ingredient.ID, ingredient.Name)
+	result, err := updateStatement.ExecContext(ctx, ingredient.ID, ingredient.Name)
 	if err != nil {
 		return err
 	}
@@ -110,8 +111,8 @@ func (dao *IngredientDao) UpdateIngredient(ingredient model.Ingredient) error {
 }
 
 // GetAllIngredients returns all ingredients
-func (dao *IngredientDao) GetAllIngredients() ([]model.Ingredient, error) {
-	rows, err := dao.holder.db.Query("select id, name from ingredient")
+func (dao *IngredientDao) GetAllIngredients(ctx context.Context) ([]model.Ingredient, error) {
+	rows, err := dao.holder.db.QueryContext(ctx, "select id, name from ingredient")
 	if err != nil {
 		return nil, err
 	}

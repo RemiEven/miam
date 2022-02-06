@@ -34,6 +34,7 @@ func startApplication() (errors []error) {
 			errors = append(errors, err)
 		}
 	}
+	ctx := context.Background()
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
@@ -48,13 +49,13 @@ func startApplication() (errors []error) {
 	}
 	defer func() { appendError(serviceContext.Close()) }()
 
-	ids, err := serviceContext.GetDatasourceContext().RecipeDao.StreamRecipeIds()
+	ids, err := serviceContext.GetDatasourceContext().RecipeDao.StreamRecipeIds(ctx)
 	if err != nil {
 		appendError(err)
 		return
 	}
 	for _, id := range ids {
-		recipe, err := serviceContext.GetDatasourceContext().RecipeDao.GetRecipe(id)
+		recipe, err := serviceContext.GetDatasourceContext().RecipeDao.GetRecipe(ctx, id)
 		if err != nil {
 			appendError(err)
 			return
@@ -117,10 +118,10 @@ func startApplication() (errors []error) {
 	<-c
 
 	wait := time.Second * 15
-	ctx, cancel := context.WithTimeout(context.Background(), wait)
+	shutdownCtx, cancel := context.WithTimeout(ctx, wait)
 	defer cancel()
 
-	srv.Shutdown(ctx)
+	srv.Shutdown(shutdownCtx)
 
 	log.Info().Msg("shutting down")
 

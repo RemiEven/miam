@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/model"
@@ -21,30 +23,30 @@ func newIngredientService(ingredientDao *datasource.IngredientDao, recipeIngredi
 }
 
 // GetAllIngredients returns all known ingredients
-func (service *IngredientService) GetAllIngredients() ([]model.Ingredient, error) {
-	return service.ingredientDao.GetAllIngredients()
+func (service *IngredientService) GetAllIngredients(ctx context.Context) ([]model.Ingredient, error) {
+	return service.ingredientDao.GetAllIngredients(ctx)
 }
 
 // UpdateIngredient updates an ingredient
-func (service *IngredientService) UpdateIngredient(ID string, update model.BaseIngredient) (*model.Ingredient, error) {
+func (service *IngredientService) UpdateIngredient(ctx context.Context, ID string, update model.BaseIngredient) (*model.Ingredient, error) {
 	ingredient := model.Ingredient{
 		ID:             ID,
 		BaseIngredient: update,
 	}
-	if err := service.ingredientDao.UpdateIngredient(ingredient); err != nil {
+	if err := service.ingredientDao.UpdateIngredient(ctx, ingredient); err != nil {
 		return nil, err
 	}
 	return &ingredient, nil
 }
 
 // DeleteIngredient deletes the ingredient with the given id
-func (service *IngredientService) DeleteIngredient(ID string) error {
-	used, err := service.recipeIngredientDao.IsUsedInRecipe(ID)
+func (service *IngredientService) DeleteIngredient(ctx context.Context, ID string) error {
+	used, err := service.recipeIngredientDao.IsUsedInRecipe(ctx, ID)
 	if err != nil {
 		return err
 	}
 	if used {
 		return common.ErrInvalidOperation
 	}
-	return service.ingredientDao.DeleteIngredient(ID)
+	return service.ingredientDao.DeleteIngredient(ctx, ID)
 }

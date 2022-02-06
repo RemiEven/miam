@@ -28,7 +28,7 @@ func NewRecipeHandler(recipeService *service.RecipeService) *RecipeHandler {
 func (handler *RecipeHandler) GetRecipeByID(responseWriter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
 
-	recipe, err := handler.recipeService.GetRecipe(vars["id"])
+	recipe, err := handler.recipeService.GetRecipe(request.Context(), vars["id"])
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -50,7 +50,7 @@ func (handler *RecipeHandler) AddRecipe(responseWriter http.ResponseWriter, requ
 		return
 	}
 
-	id, err := handler.recipeService.AddRecipe(recipe)
+	id, err := handler.recipeService.AddRecipe(request.Context(), recipe)
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -73,7 +73,7 @@ func (handler *RecipeHandler) UpdateRecipe(responseWriter http.ResponseWriter, r
 	}
 
 	id := mux.Vars(request)["id"]
-	updated, err := handler.recipeService.UpdateRecipe(id, recipe)
+	updated, err := handler.recipeService.UpdateRecipe(request.Context(), id, recipe)
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -89,7 +89,7 @@ func (handler *RecipeHandler) DeleteRecipe(responseWriter http.ResponseWriter, r
 	vars := mux.Vars(request)
 	strID := vars["id"]
 
-	if err := handler.recipeService.DeleteRecipe(strID); err != nil {
+	if err := handler.recipeService.DeleteRecipe(request.Context(), strID); err != nil {
 		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
@@ -108,7 +108,7 @@ func (handler *RecipeHandler) SearchRecipe(responseWriter http.ResponseWriter, r
 		return
 	}
 
-	results, err := handler.recipeService.SearchRecipe(search)
+	results, err := handler.recipeService.SearchRecipe(request.Context(), search)
 	if err != nil {
 		log.Error().Err(err).Msg("")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
