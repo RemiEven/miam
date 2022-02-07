@@ -9,20 +9,16 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 
 	"github.com/RemiEven/miam/datasource"
-	"github.com/RemiEven/miam/handler"
+	"github.com/RemiEven/miam/rest"
 	"github.com/RemiEven/miam/service"
 )
 
 const defaultPort = 7040
-
-var defaultAllowedHosts = []string{"http://localhost:8080"}
 
 func main() {
 	for _, err := range startApplication() {
@@ -83,28 +79,9 @@ func startApplication() (errors []error) {
 		return
 	}
 
-	var (
-		recipeHandler     = handler.NewRecipeHandler(recipeService)
-		ingredientHandler = handler.NewIngredientHandler(ingredientService)
-		router            = mux.NewRouter()
-	)
-
-	router.Use(handlers.CompressHandler)
-	configureCORS(router)
-
-	router.HandleFunc("/recipe", recipeHandler.AddRecipe).Methods(http.MethodPost)
-	router.HandleFunc("/recipe/{id}", recipeHandler.GetRecipeByID).Methods(http.MethodGet)
-	router.HandleFunc("/recipe/{id}", recipeHandler.UpdateRecipe).Methods(http.MethodPut)
-	router.HandleFunc("/recipe/{id}", recipeHandler.DeleteRecipe).Methods(http.MethodDelete)
-	router.HandleFunc("/recipe/search", recipeHandler.SearchRecipe).Methods(http.MethodPost)
-	router.HandleFunc("/ingredient", ingredientHandler.GetIngredients).Methods(http.MethodGet)
-	router.HandleFunc("/ingredient/{id}", ingredientHandler.UpdateIngredient).Methods(http.MethodPut)
-	router.HandleFunc("/ingredient/{id}", ingredientHandler.DeleteIngredient).Methods(http.MethodDelete)
-
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", handler.SpaHandler{})).Methods(http.MethodGet)
+	router := rest.CreateRouter(recipeService, ingredientService)
 
 	port := defaultPort
-
 	srv := &http.Server{
 		Addr:         ":" + strconv.Itoa(port),
 		WriteTimeout: time.Second * 15,
@@ -139,25 +116,4 @@ func startApplication() (errors []error) {
 	log.Info().Msg("shutting down")
 
 	return
-}
-
-func configureCORS(router *mux.Router) {
-	router.Use(handlers.CORS(
-		handlers.AllowedOrigins(defaultAllowedHosts),
-		handlers.AllowedMethods([]string{
-			http.MethodOptions,
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodDelete,
-		}),
-		handlers.AllowedHeaders([]string{
-			"Content-Type",
-		}),
-		handlers.ExposedHeaders([]string{
-			"Location",
-		}),
-	))
-	router.Use(mux.CORSMethodMiddleware(router))
-	router.PathPrefix("/").HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {}).Methods(http.MethodOptions)
 }

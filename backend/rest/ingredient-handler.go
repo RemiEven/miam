@@ -1,4 +1,4 @@
-package handler
+package rest
 
 import (
 	"encoding/json"
@@ -16,8 +16,7 @@ type IngredientHandler struct {
 	ingredientService *service.IngredientService
 }
 
-// NewIngredientHandler creates a new ingredient handler
-func NewIngredientHandler(ingredientService *service.IngredientService) *IngredientHandler {
+func newIngredientHandler(ingredientService *service.IngredientService) *IngredientHandler {
 	return &IngredientHandler{
 		ingredientService,
 	}
