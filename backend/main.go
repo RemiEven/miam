@@ -39,7 +39,7 @@ func startApplication() (errors []error) {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	log.Info().Msg("Starting")
 
-	databaseHolder, err := datasource.NewDatabaseHolder()
+	databaseHolder, err := datasource.NewDatabaseHolder("./miam.db")
 	if err != nil {
 		appendError(fmt.Errorf("failed to create database holder: %w", err))
 		return

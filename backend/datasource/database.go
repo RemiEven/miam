@@ -13,8 +13,8 @@ type DatabaseHolder struct {
 }
 
 // NewDatabaseHolder returns a new database holder
-func NewDatabaseHolder() (*DatabaseHolder, error) {
-	db, err := sql.Open("sqlite3", "./miam.db")
+func NewDatabaseHolder(dbFilePath string) (*DatabaseHolder, error) {
+	db, err := sql.Open("sqlite3", dbFilePath)
 	if err != nil {
 		return nil, err
 	}
