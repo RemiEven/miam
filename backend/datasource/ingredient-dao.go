@@ -3,6 +3,7 @@ package datasource
 import (
 	"context"
 	"database/sql"
+	"errors"
 
 	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/model"
@@ -29,26 +30,21 @@ func (dao *IngredientDao) GetIngredient(ctx context.Context, ID string) (*model.
 	if err != nil {
 		return nil, err
 	}
-	rows, err := dao.holder.db.QueryContext(ctx, "select name from ingredient where id=?", oid)
-	if err != nil {
+	row := dao.holder.db.QueryRowContext(ctx, "select name from ingredient where id=?", oid)
+	var name string
+
+	if err := row.Scan(&name); errors.Is(err, sql.ErrNoRows) {
+		return nil, common.ErrNotFound
+	} else if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	if rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			return nil, err
-		}
-		return &model.Ingredient{
-			ID: ID,
-			BaseIngredient: model.BaseIngredient{
-				Name: name,
-			},
-		}, nil
-	} else if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return nil, common.ErrNotFound
+
+	return &model.Ingredient{
+		ID: ID,
+		BaseIngredient: model.BaseIngredient{
+			Name: name,
+		},
+	}, nil
 }
 
 // AddIngredient adds a new ingredient

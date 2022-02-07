@@ -34,33 +34,27 @@ func (dao *RecipeDao) GetRecipe(ctx context.Context, ID string) (*model.Recipe, 
 	if err != nil {
 		return nil, err
 	}
-	rows, err := dao.holder.db.QueryContext(ctx, "select name, how_to from recipe where id=?", oid)
+	row := dao.holder.db.QueryRowContext(ctx, "select name, how_to from recipe where id=?", oid)
+	var name, howTo string
+
+	if err := row.Scan(&name, &howTo); errors.Is(err, sql.ErrNoRows) {
+		return nil, common.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+	ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ctx, ID)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-	if rows.Next() {
-		var name, howTo string
-		if err := rows.Scan(&name, &howTo); err != nil {
-			return nil, err
-		}
-		ingredients, err := dao.recipeIngredientDao.GetRecipeIngredients(ctx, ID)
-		if err != nil {
-			return nil, err
-		}
 
-		return &model.Recipe{
-			ID: ID,
-			BaseRecipe: model.BaseRecipe{
-				Name:        name,
-				HowTo:       howTo,
-				Ingredients: ingredients,
-			},
-		}, nil
-	} else if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return nil, common.ErrNotFound
+	return &model.Recipe{
+		ID: ID,
+		BaseRecipe: model.BaseRecipe{
+			Name:        name,
+			HowTo:       howTo,
+			Ingredients: ingredients,
+		},
+	}, nil
 }
 
 // GetRecipes returns the recipes with the given IDs or an empty slice

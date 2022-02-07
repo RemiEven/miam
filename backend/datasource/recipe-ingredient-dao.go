@@ -3,7 +3,6 @@ package datasource
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/RemiEven/miam/common"
 
@@ -108,21 +107,12 @@ func (dao *RecipeIngredientDao) IsUsedInRecipe(ctx context.Context, ingredientID
 	if err != nil {
 		return false, err
 	}
-	rows, err := dao.holder.db.QueryContext(ctx, "select exists(select 1 from recipe_ingredient where ingredient_id=?)", intID)
-	if err != nil {
-		return false, nil
-	}
-	defer rows.Close()
-	if rows.Next() {
-		var exists bool
-		if err := rows.Scan(&exists); err != nil {
-			return false, err
-		}
-		return exists, nil
-	} else if err := rows.Err(); err != nil {
+	row := dao.holder.db.QueryRowContext(ctx, "select exists(select 1 from recipe_ingredient where ingredient_id=?)", intID)
+	var exists bool
+	if err := row.Scan(&exists); err != nil {
 		return false, err
 	}
-	return false, fmt.Errorf("fail to query for recipes using ingredient [%s]", ingredientID)
+	return exists, nil
 }
 
 // DeleteRecipeIngredients deletes the ingredients of a recipe
