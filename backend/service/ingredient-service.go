@@ -14,8 +14,8 @@ type IngredientService struct {
 	recipeIngredientDao *datasource.RecipeIngredientDao
 }
 
-// newIngredientService creates a new ingredient service
-func newIngredientService(ingredientDao *datasource.IngredientDao, recipeIngredientDao *datasource.RecipeIngredientDao) *IngredientService {
+// NewIngredientService creates a new ingredient service
+func NewIngredientService(ingredientDao *datasource.IngredientDao, recipeIngredientDao *datasource.RecipeIngredientDao) *IngredientService {
 	return &IngredientService{
 		ingredientDao,
 		recipeIngredientDao,

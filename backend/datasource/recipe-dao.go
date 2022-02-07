@@ -6,19 +6,20 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/model"
-	"github.com/rs/zerolog/log"
 )
 
 // RecipeDao is a recipe dao
 type RecipeDao struct {
-	holder              *databaseHolder
+	holder              *DatabaseHolder
 	recipeIngredientDao *RecipeIngredientDao
 }
 
 // NewRecipeDao returns a new recipe dao
-func newRecipeDao(holder *databaseHolder, recipeIngredientDao *RecipeIngredientDao) (*RecipeDao, error) {
+func NewRecipeDao(holder *DatabaseHolder, recipeIngredientDao *RecipeIngredientDao) (*RecipeDao, error) {
 	initStatement := `
 		create table if not exists recipe (id integer primary key asc, name text, how_to text);
 	`
@@ -307,8 +308,8 @@ func rollback(transaction *sql.Tx) {
 	}
 }
 
-// StreamRecipeIds returns all recipe ids
-func (dao *RecipeDao) StreamRecipeIds(ctx context.Context) ([]string, error) {
+// ListRecipeIds returns all recipe ids
+func (dao *RecipeDao) ListRecipeIds(ctx context.Context) ([]string, error) {
 	rows, err := dao.holder.db.QueryContext(ctx, "select id from recipe")
 	if err != nil {
 		return nil, err

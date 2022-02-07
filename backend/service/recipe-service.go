@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/model"
 )
@@ -14,12 +16,36 @@ type RecipeService struct {
 	searchDao *datasource.RecipeSearchDao
 }
 
-// newRecipeService creates a new recipe service
-func newRecipeService(recipeDao *datasource.RecipeDao, searchDao *datasource.RecipeSearchDao) *RecipeService {
+// NewRecipeService creates a new recipe service
+func NewRecipeService(recipeDao *datasource.RecipeDao, searchDao *datasource.RecipeSearchDao) *RecipeService {
 	return &RecipeService{
 		recipeDao,
 		searchDao,
 	}
+}
+
+// IndexAllExistingRecipes lists all recipes that are in the database and index them so that they are searchable
+func (service *RecipeService) IndexAllExistingRecipes(ctx context.Context) error {
+	ids, err := service.recipeDao.ListRecipeIds(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to list recipes: %w", err)
+	}
+
+	for _, id := range ids {
+		recipe, err := service.recipeDao.GetRecipe(ctx, id)
+		if err != nil {
+			return fmt.Errorf("failed to get recipe for id [%s]: %w", id, err)
+		}
+		if recipe == nil {
+			continue
+		}
+		if err := service.searchDao.IndexRecipe(*recipe); err != nil {
+			return fmt.Errorf("failed to index recipe with id [%s]: %w", id, err)
+		}
+		log.Debug().Str("id", id).Msg("indexed recipe")
+	}
+
+	return nil
 }
 
 // SearchRecipe searches for recipes

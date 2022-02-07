@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 
+	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/handler"
 	"github.com/RemiEven/miam/service"
 )
@@ -34,7 +36,6 @@ func startApplication() (errors []error) {
 			errors = append(errors, err)
 		}
 	}
-	ctx := context.Background()
 
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
@@ -42,39 +43,52 @@ func startApplication() (errors []error) {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	log.Info().Msg("Starting")
 
-	serviceContext, err := service.NewContext()
+	databaseHolder, err := datasource.NewDatabaseHolder()
 	if err != nil {
-		appendError(err)
+		appendError(fmt.Errorf("failed to create database holder: %w", err))
 		return
 	}
-	defer func() { appendError(serviceContext.Close()) }()
+	defer func() { appendError(databaseHolder.Close()) }()
 
-	ids, err := serviceContext.GetDatasourceContext().RecipeDao.StreamRecipeIds(ctx)
+	ingredientDao, err := datasource.NewIngredientDao(databaseHolder)
 	if err != nil {
-		appendError(err)
+		appendError(fmt.Errorf("failed to initialize ingredientDao: %w", err))
 		return
 	}
-	for _, id := range ids {
-		recipe, err := serviceContext.GetDatasourceContext().RecipeDao.GetRecipe(ctx, id)
-		if err != nil {
-			appendError(err)
-			return
-		}
-		if recipe == nil {
-			continue
-		}
-		if err := serviceContext.GetDatasourceContext().RecipeSearchDao.IndexRecipe(*recipe); err != nil {
-			appendError(err)
-			return
-		} else {
-			log.Debug().Str("id", id).Msg("indexed recipe")
-		}
+	recipeIngredientDao, err := datasource.NewRecipeIngredientDao(databaseHolder, ingredientDao)
+	if err != nil {
+		appendError(fmt.Errorf("failed to initialize recipeIngredientDao: %w", err))
+		return
+	}
+	recipeDao, err := datasource.NewRecipeDao(databaseHolder, recipeIngredientDao)
+	if err != nil {
+		appendError(fmt.Errorf("failed to initialize recipeDao: %w", err))
+		return
+	}
+	recipeSearchDao, err := datasource.NewRecipeSearchDao()
+	if err != nil {
+		appendError(fmt.Errorf("failed to initialize recipeSearchDao: %w", err))
+		return
+	}
+	defer func() { appendError(recipeSearchDao.Close()) }()
+
+	var (
+		ingredientService = service.NewIngredientService(ingredientDao, recipeIngredientDao)
+		recipeService     = service.NewRecipeService(recipeDao, recipeSearchDao)
+	)
+
+	ctx := context.Background()
+	if err := recipeService.IndexAllExistingRecipes(ctx); err != nil {
+		appendError(fmt.Errorf("failed to index recipes: %w", err))
+		return
 	}
 
-	recipeHandler := handler.NewRecipeHandler(serviceContext.RecipeService)
-	ingredientHandler := handler.NewIngredientHandler(serviceContext.IngredientService)
+	var (
+		recipeHandler     = handler.NewRecipeHandler(recipeService)
+		ingredientHandler = handler.NewIngredientHandler(ingredientService)
+		router            = mux.NewRouter()
+	)
 
-	router := mux.NewRouter()
 	router.Use(handlers.CompressHandler)
 	configureCORS(router)
 
@@ -106,7 +120,6 @@ func startApplication() (errors []error) {
 				log.Info().Msg("closed http server")
 			} else {
 				log.Error().Err(err)
-				serviceContext.Close()
 				os.Exit(1)
 			}
 		}

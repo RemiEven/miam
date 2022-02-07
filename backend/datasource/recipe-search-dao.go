@@ -17,7 +17,8 @@ type RecipeSearchDao struct {
 	index bleve.Index
 }
 
-func newRecipeSearchDao() (*RecipeSearchDao, error) {
+// NewRecipeSearchDao creates a new recipe search dao
+func NewRecipeSearchDao() (*RecipeSearchDao, error) {
 	mapping := buildIndexMapping()
 	recipeIndex, err := bleve.NewMemOnly(mapping)
 	if err != nil {

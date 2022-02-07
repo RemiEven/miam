@@ -11,12 +11,12 @@ import (
 
 // RecipeIngredientDao struct
 type RecipeIngredientDao struct {
-	holder        *databaseHolder
+	holder        *DatabaseHolder
 	ingredientDao *IngredientDao
 }
 
 // NewRecipeIngredientDao returns a new recipe ingredient dao
-func newRecipeIngredientDao(holder *databaseHolder, ingredientDao *IngredientDao) (*RecipeIngredientDao, error) {
+func NewRecipeIngredientDao(holder *DatabaseHolder, ingredientDao *IngredientDao) (*RecipeIngredientDao, error) {
 	initStatement := `
 		create table if not exists recipe_ingredient (recipe_id int, ingredient_id int, quantity text);
 		create index if not exists recipe_id_index on recipe_ingredient(recipe_id);

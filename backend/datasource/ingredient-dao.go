@@ -11,10 +11,10 @@ import (
 
 // IngredientDao struct
 type IngredientDao struct {
-	holder *databaseHolder
+	holder *DatabaseHolder
 }
 
-func newIngredientDao(holder *databaseHolder) (*IngredientDao, error) {
+func NewIngredientDao(holder *DatabaseHolder) (*IngredientDao, error) {
 	initStatement := `
 		create table if not exists ingredient (id integer primary key asc, name text)
 	`
