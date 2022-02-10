@@ -18,7 +18,7 @@ func NewIngredientDao(holder *DatabaseHolder) (*IngredientDao, error) {
 	initStatement := `
 		create table if not exists ingredient (id integer primary key asc, name text)
 	`
-	if _, err := holder.db.Exec(initStatement); err != nil {
+	if _, err := holder.DB.Exec(initStatement); err != nil {
 		return nil, err
 	}
 	return &IngredientDao{holder}, nil
@@ -30,7 +30,7 @@ func (dao *IngredientDao) GetIngredient(ctx context.Context, ID string) (*model.
 	if err != nil {
 		return nil, err
 	}
-	row := dao.holder.db.QueryRowContext(ctx, "select name from ingredient where id=?", oid)
+	row := dao.holder.DB.QueryRowContext(ctx, "select name from ingredient where id=?", oid)
 	var name string
 
 	if err := row.Scan(&name); errors.Is(err, sql.ErrNoRows) {
@@ -74,7 +74,7 @@ func (dao *IngredientDao) DeleteIngredient(ctx context.Context, ID string) error
 	if err != nil {
 		return err
 	}
-	deleteStatement, err := dao.holder.db.PrepareContext(ctx, "delete from ingredient where id=?")
+	deleteStatement, err := dao.holder.DB.PrepareContext(ctx, "delete from ingredient where id=?")
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (dao *IngredientDao) DeleteIngredient(ctx context.Context, ID string) error
 
 // UpdateIngredient updates the name of an ingredient
 func (dao *IngredientDao) UpdateIngredient(ctx context.Context, ingredient model.Ingredient) error {
-	updateStatement, err := dao.holder.db.PrepareContext(ctx, "update ingredient set name=?2 where id=?1")
+	updateStatement, err := dao.holder.DB.PrepareContext(ctx, "update ingredient set name=?2 where id=?1")
 	if err != nil {
 		return err
 	}
@@ -108,7 +108,7 @@ func (dao *IngredientDao) UpdateIngredient(ctx context.Context, ingredient model
 
 // GetAllIngredients returns all ingredients
 func (dao *IngredientDao) GetAllIngredients(ctx context.Context) ([]model.Ingredient, error) {
-	rows, err := dao.holder.db.QueryContext(ctx, "select id, name from ingredient")
+	rows, err := dao.holder.DB.QueryContext(ctx, "select id, name from ingredient")
 	if err != nil {
 		return nil, err
 	}

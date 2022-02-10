@@ -27,13 +27,22 @@ require (
 	github.com/blevesearch/zapx/v14 v14.3.2 // indirect
 	github.com/blevesearch/zapx/v15 v15.3.2 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
+	github.com/go-playground/validator/v10 v10.10.0
+	github.com/go-test/deep v1.0.8
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/zerolog v1.26.1
-	github.com/stretchr/testify v1.7.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
-	golang.org/x/sys v0.0.0-20220204135822-1c1b9b1eba6a // indirect
+	golang.org/x/sys v0.0.0-20220209214540-3681064d5158 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
+)
+
+require (
+	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/go-playground/universal-translator v0.18.0 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
+	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e // indirect
+	golang.org/x/text v0.3.7 // indirect
 )

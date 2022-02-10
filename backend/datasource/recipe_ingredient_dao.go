@@ -22,7 +22,7 @@ func NewRecipeIngredientDao(holder *DatabaseHolder, ingredientDao *IngredientDao
 		create index if not exists recipe_id_index on recipe_ingredient(recipe_id);
 		create index if not exists ingredient_id_index on recipe_ingredient(ingredient_id);
 	`
-	if _, err := holder.db.Exec(initStatement); err != nil {
+	if _, err := holder.DB.Exec(initStatement); err != nil {
 		return nil, err
 	}
 	return &RecipeIngredientDao{holder, ingredientDao}, nil
@@ -34,7 +34,7 @@ func (dao *RecipeIngredientDao) GetRecipeIngredients(ctx context.Context, recipe
 	if err != nil {
 		return nil, err
 	}
-	rows, err := dao.holder.db.QueryContext(ctx, `select
+	rows, err := dao.holder.DB.QueryContext(ctx, `select
 		recipe_ingredient.ingredient_id, recipe_ingredient.quantity, ingredient.name
 		from recipe_ingredient
 		inner join ingredient
@@ -107,7 +107,7 @@ func (dao *RecipeIngredientDao) IsUsedInRecipe(ctx context.Context, ingredientID
 	if err != nil {
 		return false, err
 	}
-	row := dao.holder.db.QueryRowContext(ctx, "select exists(select 1 from recipe_ingredient where ingredient_id=?)", intID)
+	row := dao.holder.DB.QueryRowContext(ctx, "select exists(select 1 from recipe_ingredient where ingredient_id=?)", intID)
 	var exists bool
 	if err := row.Scan(&exists); err != nil {
 		return false, err

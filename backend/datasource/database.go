@@ -9,7 +9,7 @@ import (
 
 // DatabaseHolder holds a database connection
 type DatabaseHolder struct {
-	db *sql.DB
+	DB *sql.DB
 }
 
 // NewDatabaseHolder returns a new database holder
@@ -24,5 +24,5 @@ func NewDatabaseHolder(dbFilePath string) (*DatabaseHolder, error) {
 // Close cleanly closes the connection to the database
 func (holder *DatabaseHolder) Close() error {
 	log.Info().Msg("closing sqlite database connection")
-	return holder.db.Close()
+	return holder.DB.Close()
 }

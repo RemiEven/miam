@@ -23,7 +23,7 @@ func NewRecipeDao(holder *DatabaseHolder, recipeIngredientDao *RecipeIngredientD
 	initStatement := `
 		create table if not exists recipe (id integer primary key asc, name text, how_to text);
 	`
-	if _, err := holder.db.Exec(initStatement); err != nil {
+	if _, err := holder.DB.Exec(initStatement); err != nil {
 		return nil, err
 	}
 	return &RecipeDao{holder, recipeIngredientDao}, nil
@@ -35,7 +35,7 @@ func (dao *RecipeDao) GetRecipe(ctx context.Context, ID string) (*model.Recipe, 
 	if err != nil {
 		return nil, err
 	}
-	row := dao.holder.db.QueryRowContext(ctx, "select name, how_to from recipe where id=?", oid)
+	row := dao.holder.DB.QueryRowContext(ctx, "select name, how_to from recipe where id=?", oid)
 	var name, howTo string
 
 	if err := row.Scan(&name, &howTo); errors.Is(err, sql.ErrNoRows) {
@@ -71,7 +71,7 @@ func (dao *RecipeDao) GetRecipes(ctx context.Context, IDs []string) ([]model.Rec
 			return nil, err
 		}
 	}
-	rows, err := dao.holder.db.QueryContext(ctx, "select id, name, how_to from recipe where id in ("+queryParamPlaceholders+")", queryParams...)
+	rows, err := dao.holder.DB.QueryContext(ctx, "select id, name, how_to from recipe where id in ("+queryParamPlaceholders+")", queryParams...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (dao *RecipeDao) GetRecipes(ctx context.Context, IDs []string) ([]model.Rec
 
 // AddRecipe adds the given recipe
 func (dao *RecipeDao) AddRecipe(ctx context.Context, recipe *model.BaseRecipe) (string, error) {
-	transaction, err := dao.holder.db.Begin()
+	transaction, err := dao.holder.DB.Begin()
 	if err != nil {
 		return "", err
 	}
@@ -141,7 +141,7 @@ func (dao *RecipeDao) DeleteRecipe(ctx context.Context, ID string) error {
 	if err != nil {
 		return err
 	}
-	transaction, err := dao.holder.db.Begin()
+	transaction, err := dao.holder.DB.Begin()
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func (dao *RecipeDao) DeleteRecipe(ctx context.Context, ID string) error {
 
 // UpdateRecipe updates a recipe
 func (dao *RecipeDao) UpdateRecipe(ctx context.Context, recipe model.Recipe) (*model.Recipe, error) {
-	transaction, err := dao.holder.db.Begin()
+	transaction, err := dao.holder.DB.Begin()
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +253,7 @@ func (dao *RecipeDao) GetRandomRecipes(ctx context.Context, search model.RecipeS
 
 // getRandomRecipes returns a given number of randomly selected recipes
 func (dao *RecipeDao) getRandomRecipes(ctx context.Context, numberWanted int) ([]model.Recipe, error) {
-	rows, err := dao.holder.db.QueryContext(ctx, "select id, name, how_to from recipe where id in (select id from recipe order by random() limit ?)", numberWanted)
+	rows, err := dao.holder.DB.QueryContext(ctx, "select id, name, how_to from recipe where id in (select id from recipe order by random() limit ?)", numberWanted)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +285,7 @@ func (dao *RecipeDao) getRandomRecipes(ctx context.Context, numberWanted int) ([
 
 // getRecipeCount returns the number of saved recipes
 func (dao *RecipeDao) getRecipeCount(ctx context.Context) (int, error) {
-	rows, err := dao.holder.db.QueryContext(ctx, "select count(*) from recipe")
+	rows, err := dao.holder.DB.QueryContext(ctx, "select count(*) from recipe")
 	if err != nil {
 		return 0, err
 	}
@@ -310,7 +310,7 @@ func rollback(transaction *sql.Tx) {
 
 // ListRecipeIds returns all recipe ids
 func (dao *RecipeDao) ListRecipeIds(ctx context.Context) ([]string, error) {
-	rows, err := dao.holder.db.QueryContext(ctx, "select id from recipe")
+	rows, err := dao.holder.DB.QueryContext(ctx, "select id from recipe")
 	if err != nil {
 		return nil, err
 	}
