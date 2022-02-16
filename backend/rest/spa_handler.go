@@ -1,14 +1,20 @@
 package rest
 
 import (
+	"bytes"
+	"embed"
+	"errors"
+	"io/fs"
 	"net/http"
-	"os"
 	"time"
 )
 
+//go:embed static/*
+var staticContentFs embed.FS
+
 const (
 	index      = "index.html"
-	baseFolder = "./static/"
+	baseFolder = "static/"
 )
 
 var applicationStartTime time.Time
@@ -27,11 +33,11 @@ func (handler SpaHandler) ServeHTTP(responseWriter http.ResponseWriter, request 
 		upath = index
 	}
 
-	file, err := os.Open(baseFolder + upath)
+	content, err := staticContentFs.ReadFile(baseFolder + upath)
 	switch {
 	case err == nil:
-		http.ServeContent(responseWriter, request, upath, applicationStartTime, file)
-	case os.IsNotExist(err):
+		http.ServeContent(responseWriter, request, upath, applicationStartTime, bytes.NewReader(content))
+	case errors.Is(err, fs.ErrNotExist):
 		serveIndex(responseWriter, request)
 	default:
 		http.Error(responseWriter, "Internal server error", http.StatusInternalServerError)
@@ -39,9 +45,9 @@ func (handler SpaHandler) ServeHTTP(responseWriter http.ResponseWriter, request 
 }
 
 func serveIndex(responseWriter http.ResponseWriter, request *http.Request) {
-	if file, err := os.Open(baseFolder + index); err != nil {
+	if content, err := staticContentFs.ReadFile(baseFolder + index); err != nil {
 		http.Error(responseWriter, "Internal server error", http.StatusInternalServerError)
 	} else {
-		http.ServeContent(responseWriter, request, index, applicationStartTime, file)
+		http.ServeContent(responseWriter, request, index, applicationStartTime, bytes.NewReader(content))
 	}
 }

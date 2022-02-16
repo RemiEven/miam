@@ -3,41 +3,26 @@
 - hosts: raspberry
   remote_user: pi
   tasks:
-  - name: Create temporary build directory
-    tempfile:
-      state: directory
-      prefix: "ansible-miam."
-    register: temp_dir
-  - name: Upload miam archive and extract it
-    unarchive:
-      src: /build/miam.tar.gz
-      dest: "{{temp_dir.path}}"
   - name: Stop miam service
     become: true
     become_method: sudo
     service:
       name: miam
       state: stopped
-  - name: Replace executable
-    command: mv {{temp_dir.path}}/miam/main /home/pi/miam/main
-  - name: Remove existing front files
-    file:
-      path: /home/pi/miam/static
-      state: absent
-  - name: Replace front files
-    command: mv {{temp_dir.path}}/miam/static /home/pi/miam/static
-  - name: Replace configuration files
-    command: mv {{temp_dir.path}}/miam/deploy/configuration.json /home/pi/miam/configuration.json
+  - name: Upload and replace configuration file
+    copy:
+      src: /miam/deploy/configuration.json
+      dest: /home/pi/miam/configuration.json
+  - name: Upload and replace executable
+    copy:
+      src: /miam/main
+      dest: /home/pi/miam/main
   - name: Start miam service
     become: true
     become_method: sudo
     service:
       name: miam
       state: started
-  - name: Clean-up temp build dir
-    file:
-      path: "{{temp_dir.path}}"
-      state: absent
 
 # TODO: finish to add tasks to setup the service
 # scp miam.service pi@192.168.1.21:/tmp/miam.service
