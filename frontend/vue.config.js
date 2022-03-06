@@ -1,9 +1,7 @@
-module.exports = {
-    productionSourceMap: false,
-    publicPath: '/static/',
-    outputDir: undefined,
-    assetsDir: undefined,
-    runtimeCompiler: undefined,
-    parallel: undefined,
-    css: undefined
-};
+const { defineConfig } = require("@vue/cli-service");
+module.exports = defineConfig({
+  transpileDependencies: true,
+  lintOnSave: false,
+  publicPath: '/static/',
+  productionSourceMap: false,
+});
