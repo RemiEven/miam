@@ -1,5 +1,5 @@
 # --- Build frontend
-FROM node:11.9-alpine as build-frontend
+FROM node:16.20-alpine as build-frontend
 
 COPY frontend /miam
 WORKDIR /miam
@@ -7,7 +7,7 @@ RUN npm install
 RUN npm run build
 
 # --- Build backend
-FROM golang:1.17-stretch as build-backend
+FROM golang:1.20 as build-backend
 
 RUN apt-get update && apt-get install -y gccgo-arm-linux-gnueabi
 

@@ -2,6 +2,8 @@ package common
 
 import "errors"
 
+// TODO: use same pattern as in pb-core here
+
 // ErrNotFound is used when an element could not be found
 var ErrNotFound = errors.New("Element not found")
 
