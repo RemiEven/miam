@@ -1,9 +1,8 @@
 package datasource
 
 import (
+	"fmt"
 	"strconv"
-
-	"github.com/RemiEven/miam/common"
 )
 
 type sqliteID = int
@@ -12,7 +11,7 @@ type sqliteID = int
 func toSqliteID(ID string) (sqliteID, error) {
 	intID, err := strconv.Atoi(ID)
 	if err != nil {
-		return 0, common.ErrInvalidID // TODO: wrap root error
+		return 0, fmt.Errorf("failed to parse as an int: %w", err)
 	}
 	return intID, nil
 }

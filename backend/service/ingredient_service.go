@@ -2,10 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/RemiEven/miam/common"
 	"github.com/RemiEven/miam/datasource"
 	"github.com/RemiEven/miam/model"
+	"github.com/RemiEven/miam/pb-lite/failure"
 )
 
 // IngredientService struct
@@ -34,7 +35,7 @@ func (service *IngredientService) UpdateIngredient(ctx context.Context, ID strin
 		BaseIngredient: update,
 	}
 	if err := service.ingredientDao.UpdateIngredient(ctx, ingredient); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update ingredient: %w", err)
 	}
 	return &ingredient, nil
 }
@@ -43,10 +44,17 @@ func (service *IngredientService) UpdateIngredient(ctx context.Context, ID strin
 func (service *IngredientService) DeleteIngredient(ctx context.Context, ID string) error {
 	used, err := service.recipeIngredientDao.IsUsedInRecipe(ctx, ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to check if ingredient is used in recipe: %w", err)
 	}
 	if used {
-		return common.ErrInvalidOperation
+		return &failure.InvalidValueError{
+			Message: "cannot delete ingredient [" + ID + "] because it's still used in some recipes",
+		}
 	}
-	return service.ingredientDao.DeleteIngredient(ctx, ID)
+
+	if err := service.ingredientDao.DeleteIngredient(ctx, ID); err != nil {
+		return fmt.Errorf("failed to delete ingredient: %w", err)
+	}
+
+	return nil
 }

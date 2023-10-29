@@ -22,7 +22,7 @@ func NewRecipeSearchDao() (*RecipeSearchDao, error) {
 	mapping := buildIndexMapping()
 	recipeIndex, err := bleve.NewMemOnly(mapping)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to initialize bleve search engine: %w", err)
 	}
 
 	return &RecipeSearchDao{

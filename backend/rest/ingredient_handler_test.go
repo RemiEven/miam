@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/RemiEven/miam/datasource"
+	"github.com/RemiEven/miam/pb-lite/testutils"
 	"github.com/RemiEven/miam/service"
-	"github.com/RemiEven/miam/testutils"
 )
 
 func TestGetIngredients(t *testing.T) {

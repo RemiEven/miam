@@ -55,7 +55,7 @@ func (service *RecipeService) SearchRecipe(ctx context.Context, search model.Rec
 	}
 	IDs, total, err := service.searchDao.SearchRecipes(search)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to search for recipes: %w", err)
 	}
 	recipes, err := service.recipeDao.GetRecipes(ctx, IDs)
 	if err != nil {
@@ -76,14 +76,14 @@ func (service *RecipeService) GetRecipe(ctx context.Context, ID string) (*model.
 func (service *RecipeService) AddRecipe(ctx context.Context, recipe model.BaseRecipe) (string, error) {
 	id, err := service.recipeDao.AddRecipe(ctx, &recipe)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to add recipe: %w", err)
 	}
 	addedRecipe, err := service.recipeDao.GetRecipe(ctx, id)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to retrieve added recipe: %w", err)
 	}
 	if err = service.searchDao.IndexRecipe(*addedRecipe); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to index recipe: %w", err)
 	}
 	return addedRecipe.ID, nil
 }
@@ -95,10 +95,10 @@ func (service *RecipeService) UpdateRecipe(ctx context.Context, ID string, recip
 		BaseRecipe: recipe,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update recipe: %w", err)
 	}
 	if err = service.searchDao.IndexRecipe(*updated); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to index updated recipe: %w", err)
 	}
 	return updated, nil
 }
@@ -106,7 +106,10 @@ func (service *RecipeService) UpdateRecipe(ctx context.Context, ID string, recip
 // DeleteRecipe deletes a recipe
 func (service *RecipeService) DeleteRecipe(ctx context.Context, id string) error {
 	if err := service.recipeDao.DeleteRecipe(ctx, id); err != nil {
-		return err
+		return fmt.Errorf("failed to delete recipe: %w", err)
 	}
-	return service.searchDao.DeleteRecipe(id)
+	if err := service.searchDao.DeleteRecipe(id); err != nil {
+		return fmt.Errorf("failed to delete recipe from index: %w", err)
+	}
+	return nil
 }
