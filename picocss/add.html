@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Miam</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css">
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/picocss/examples/master/company/custom.css">
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous"/>
+  </head>
+
+  <body>
+
+    <nav class="hero container">
+      <ul>
+        <li><a href="#">Recettes</a></li>
+      </ul>
+      <ul>
+        <li><a href="#" style="border-bottom: solid;border-radius: unset;">Ajouter</a></li>
+      </ul>
+      <ul>
+        <li><a href="#">Ingrédients</a></li>
+      </ul>
+    </nav>
+
+
+    <main class="container">
+      <form>
+
+        <input type="text" placeholder="Nom">
+        <textarea placeholder="Instructions" rows="5" style="margin-bottom: 0;"></textarea>
+
+        <hr>
+
+        <div style="display: flex; justify-content: space-between;">
+          <input type="text" placeholder="Nom" style="margin-right: 10px;">
+          <input type="text" placeholder="Quantité">
+          <div style="margin-left: 10px;">
+            <button role="button"><i class="fas fa-minus-square"></i></button>
+          </div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between;">
+          <input type="text" placeholder="Nom" style="margin-right: 10px;">
+          <input type="text" placeholder="Quantité">
+          <div style="margin-left: 10px;">
+            <button role="button"><i class="fas fa-minus-square"></i></button>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between;">
+          <input type="text" placeholder="Nom" style="margin-right: 10px;">
+          <input type="text" placeholder="Quantité">
+          <div style="margin-left: 10px;">
+            <button role="button"><i class="fas fa-minus-square"></i></button>
+          </div>
+        </div>
+
+        <button type="button" class="secondary outline">Ajouter un ingrédient</button>
+
+        <hr>
+        <button type="submit">Ajouter la recette</button>
+      </form>
+    </main>
+
+  </body>
+
+</html>
