@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/RemiEven/miam/datasource"
-	"github.com/RemiEven/miam/model"
-	"github.com/RemiEven/miam/pb-lite/failure"
+	"github.com/remieven/miam/datasource"
+	"github.com/remieven/miam/model"
+	"github.com/remieven/miam/pb-lite/failure"
 )
 
 // IngredientService struct

@@ -9,7 +9,7 @@ import (
 	"github.com/blevesearch/bleve/v2/mapping"
 	"github.com/rs/zerolog/log"
 
-	"github.com/RemiEven/miam/model"
+	"github.com/remieven/miam/model"
 )
 
 // RecipeSearchDao struct

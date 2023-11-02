@@ -2,13 +2,37 @@ package testutils
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/go-test/deep"
+
+	"github.com/remieven/miam/pb-lite/failure"
 )
+
+// ErrorResponseBodyTest creates a function checking that a string match an error response body with the wanted error code
+func ErrorResponseBodyTest(code failure.ErrorCode) func(string) (string, bool) {
+	return func(body string) (string, bool) {
+		var errorBody failure.ErrorResponseBody
+		if err := json.Unmarshal([]byte(body), &errorBody); err != nil {
+			return fmt.Sprintf("failed to parse body [%q]: %+v", body, err), false
+		}
+		if errorBody.Code == "" {
+			return fmt.Sprintf("expected an error response body with code [%q], but got body [%q]", code, body), false
+		}
+		if errorBody.Code != code {
+			return fmt.Sprintf("got error response body with code [%q] (message: [%q]), expected [%q]", errorBody.Code, errorBody.Message, code), false
+		}
+		if errorBody.Message == "" {
+			return "got error response body with an empty or missing message", false
+		}
+		return "", true
+	}
+}
 
 // EmptyResponseBodyTest checks that a string is empty
 func EmptyResponseBodyTest(body string) (string, bool) {
@@ -123,3 +147,16 @@ func DeepEqual(actual, expected interface{}) string {
 		return diffHeader + "\n- " + strings.Join(diff, "\n- ")
 	}
 }
+
+// WriteMessageIDs write a sample response sent by the Pub/Sub API when publishing a message
+func WriteMessageIDs(responseWriter http.ResponseWriter) error {
+	_, err := fmt.Fprintln(responseWriter, `{
+  "messageIds": [
+   "755993117165864"
+  ]
+ }`)
+	return err
+}
+
+// ErrSampleTechnical can be used in mocks when simulating errors
+var ErrSampleTechnical = errors.New("there's been a great disturbance in the Force")

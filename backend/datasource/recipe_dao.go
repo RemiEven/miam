@@ -9,8 +9,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/RemiEven/miam/model"
-	"github.com/RemiEven/miam/pb-lite/failure"
+	"github.com/remieven/miam/model"
+	"github.com/remieven/miam/pb-lite/failure"
 )
 
 // RecipeDao is a recipe dao

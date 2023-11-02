@@ -25,7 +25,7 @@ func (erb *ErrorResponseBody) IsOneOf(codes ...ErrorCode) bool {
 
 var _ error = (*InvalidValueError)(nil) // ensure that *InvalidValueError implements error
 
-// InvalidValueError is used when a resource is not found
+// InvalidValueError is used when a value is invalid (error on type/pattern, missing value...)
 type InvalidValueError struct {
 	Message string
 	Cause   error

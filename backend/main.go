@@ -13,9 +13,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/pkgerrors"
 
-	"github.com/RemiEven/miam/datasource"
-	"github.com/RemiEven/miam/rest"
-	"github.com/RemiEven/miam/service"
+	"github.com/remieven/miam/datasource"
+	"github.com/remieven/miam/rest"
+	"github.com/remieven/miam/service"
 )
 
 const defaultPort = 7040

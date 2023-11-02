@@ -6,7 +6,8 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
-	"github.com/RemiEven/miam/service"
+	"github.com/remieven/miam/pb-lite/rest"
+	"github.com/remieven/miam/service"
 )
 
 var defaultAllowedHosts = []string{"http://localhost:8080"}
@@ -21,6 +22,8 @@ func CreateRouter(recipeService *service.RecipeService, ingredientService *servi
 	)
 
 	router.Use(handlers.CompressHandler)
+	router.NotFoundHandler = http.HandlerFunc(rest.NotFoundHandler)
+	router.MethodNotAllowedHandler = http.HandlerFunc(rest.MethodNotAllowedHandler)
 	configureCORS(router)
 
 	router.HandleFunc("/recipe", recipeHandler.AddRecipe).Methods(http.MethodPost)
@@ -48,10 +51,11 @@ func configureCORS(router *mux.Router) {
 			http.MethodDelete,
 		}),
 		handlers.AllowedHeaders([]string{
-			"Content-Type",
+			rest.HeaderContentType,
 		}),
 		handlers.ExposedHeaders([]string{
-			"Location",
+			rest.HeaderContentType,
+			rest.HeaderLocation,
 		}),
 	))
 	router.Use(mux.CORSMethodMiddleware(router))

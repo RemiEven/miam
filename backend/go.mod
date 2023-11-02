@@ -1,4 +1,4 @@
-module github.com/RemiEven/miam
+module github.com/remieven/miam
 
 go 1.20
 

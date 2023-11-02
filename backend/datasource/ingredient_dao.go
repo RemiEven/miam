@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/RemiEven/miam/model"
-	"github.com/RemiEven/miam/pb-lite/failure"
+	"github.com/remieven/miam/model"
+	"github.com/remieven/miam/pb-lite/failure"
 )
 
 // IngredientDao struct

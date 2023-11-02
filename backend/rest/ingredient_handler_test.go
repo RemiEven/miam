@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/RemiEven/miam/datasource"
-	"github.com/RemiEven/miam/pb-lite/testutils"
-	"github.com/RemiEven/miam/service"
+	"github.com/remieven/miam/datasource"
+	"github.com/remieven/miam/pb-lite/testutils"
+	"github.com/remieven/miam/service"
 )
 
 func TestGetIngredients(t *testing.T) {

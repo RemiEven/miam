@@ -6,8 +6,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/RemiEven/miam/datasource"
-	"github.com/RemiEven/miam/model"
+	"github.com/remieven/miam/datasource"
+	"github.com/remieven/miam/model"
 )
 
 // RecipeService struct

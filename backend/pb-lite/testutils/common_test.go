@@ -5,7 +5,70 @@ import (
 	"fmt"
 	"testing"
 	"time"
+
+	"github.com/remieven/miam/pb-lite/failure"
 )
+
+func TestErrorResponseBodyTest(t *testing.T) {
+	testCases := map[string]struct {
+		body            string
+		wantedErrorCode failure.ErrorCode
+		expectedMatch   bool
+	}{
+		"Invalid json": {
+			body:            "Invalid json",
+			wantedErrorCode: failure.MethodNotAllowedErrorCode,
+			expectedMatch:   false,
+		},
+		"Wrong error code": {
+			body: `{
+    "code": "a wrong error code",
+    "message": "some message"
+   }`,
+			wantedErrorCode: failure.MethodNotAllowedErrorCode,
+			expectedMatch:   false,
+		},
+		"Empty message": {
+			body: `{
+    "code": "METHOD_NOT_ALLOWED",
+    "message": ""
+   }`,
+			wantedErrorCode: failure.MethodNotAllowedErrorCode,
+			expectedMatch:   false,
+		},
+		"Missing message": {
+			body: `{
+    "code": "METHOD_NOT_ALLOWED"
+   }`,
+			wantedErrorCode: failure.MethodNotAllowedErrorCode,
+			expectedMatch:   false,
+		},
+		"Not an error body": {
+			body: `{
+    "level": "OVER_9000"
+   }`,
+			wantedErrorCode: failure.MethodNotAllowedErrorCode,
+			expectedMatch:   false,
+		},
+		"Nominal case": {
+			body: `{
+    "code": "METHOD_NOT_ALLOWED",
+    "message": "some message"
+   }`,
+			wantedErrorCode: failure.MethodNotAllowedErrorCode,
+			expectedMatch:   true,
+		},
+	}
+
+	for name, test := range testCases {
+		t.Run(name, func(t *testing.T) {
+			_, match := ErrorResponseBodyTest(test.wantedErrorCode)(test.body)
+			if match != test.expectedMatch {
+				t.Errorf("Got match [%v], expected [%v]", match, test.expectedMatch)
+			}
+		})
+	}
+}
 
 func TestEmptyResponseBodyTest(t *testing.T) {
 	tests := map[string]struct {

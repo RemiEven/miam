@@ -7,8 +7,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 
-	"github.com/RemiEven/miam/model"
-	"github.com/RemiEven/miam/service"
+	"github.com/remieven/miam/model"
+	"github.com/remieven/miam/service"
 )
 
 // IngredientHandler is an ingredient handler
