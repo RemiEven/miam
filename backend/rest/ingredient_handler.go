@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/rs/zerolog/log"
 
 	"github.com/remieven/miam/model"
+	"github.com/remieven/miam/pb-lite/rest"
 	"github.com/remieven/miam/service"
 )
 
@@ -25,44 +25,32 @@ func newIngredientHandler(ingredientService *service.IngredientService) *Ingredi
 // GetIngredients returns all known ingredients
 func (handler *IngredientHandler) GetIngredients(responseWriter http.ResponseWriter, request *http.Request) {
 	ingredients, err := handler.ingredientService.GetAllIngredients(request.Context())
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	if rest.HandleErrorCase(responseWriter, err) {
 		return
 	}
-	responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(responseWriter).Encode(ingredients)
+	rest.WriteOKResponse(responseWriter, ingredients)
 }
 
 // UpdateIngredient updates an ingredient
 func (handler *IngredientHandler) UpdateIngredient(responseWriter http.ResponseWriter, request *http.Request) {
 	var baseIngredient model.BaseIngredient
-	defer request.Body.Close()
-	err := json.NewDecoder(request.Body).Decode(&baseIngredient)
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		responseWriter.WriteHeader(http.StatusBadRequest)
+	if err := json.NewDecoder(request.Body).Decode(&baseIngredient); rest.HandleParseBodyErrorCase(responseWriter, err) {
 		return
 	}
 
 	vars := mux.Vars(request)
 	ingredient, err := handler.ingredientService.UpdateIngredient(request.Context(), vars["id"], baseIngredient)
-	if err != nil {
-		log.Error().Err(err).Msg("")
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	if rest.HandleErrorCase(responseWriter, err) {
 		return
 	}
-	responseWriter.Header().Add("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(responseWriter).Encode(ingredient)
+	rest.WriteOKResponse(responseWriter, ingredient)
 }
 
 // DeleteIngredient deletes the ingredient with the given id
 func (handler *IngredientHandler) DeleteIngredient(responseWriter http.ResponseWriter, request *http.Request) {
 	vars := mux.Vars(request)
-	if err := handler.ingredientService.DeleteIngredient(request.Context(), vars["id"]); err != nil {
-		log.Error().Err(err).Msg("")
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	if err := handler.ingredientService.DeleteIngredient(request.Context(), vars["id"]); rest.HandleErrorCase(responseWriter, err) {
 		return
 	}
-	responseWriter.WriteHeader(http.StatusNoContent)
+	rest.WriteNoContentResponse(responseWriter)
 }
