@@ -4,10 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"regexp"
-
-	"github.com/rs/zerolog/log"
 
 	"github.com/remieven/miam/pb-lite/failure"
 )
@@ -46,7 +45,7 @@ func WriteErrorResponse(writer http.ResponseWriter, status int, code failure.Err
 		Message: message,
 	}
 	if encodingError := json.NewEncoder(writer).Encode(errorResponseBody); encodingError != nil {
-		log.Error().Err(encodingError).Msg("failed to encode error response body")
+		slog.With("error", encodingError).Error("failed to encode error response body")
 	}
 }
 
@@ -117,7 +116,7 @@ func HandleErrorCase(writer http.ResponseWriter, err error) bool {
 	case errors.Is(err, invalidValueError):
 		WriteErrorResponse(writer, http.StatusBadRequest, failure.InvalidArgumentErrorCode, err.Error())
 	default:
-		log.Warn().Err(err).Msg("encountered internal server error")
+		slog.With("error", err).Warn("encountered internal server error")
 		WriteErrorResponse(writer, http.StatusInternalServerError, failure.InternalErrorErrorCode, err.Error())
 	}
 

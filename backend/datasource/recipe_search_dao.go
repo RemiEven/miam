@@ -2,12 +2,12 @@ package datasource
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis/analyzer/keyword"
 	"github.com/blevesearch/bleve/v2/analysis/lang/fr"
 	"github.com/blevesearch/bleve/v2/mapping"
-	"github.com/rs/zerolog/log"
 
 	"github.com/remieven/miam/model"
 )
@@ -104,6 +104,6 @@ func (dao *RecipeSearchDao) SearchRecipes(search model.RecipeSearch) ([]string, 
 
 // Close closes the index used to search recipes
 func (dao *RecipeSearchDao) Close() error {
-	log.Info().Msg("closing bleve search engine index")
+	slog.Info("closing bleve search engine index")
 	return dao.index.Close()
 }

@@ -3,8 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-
-	"github.com/rs/zerolog/log"
+	"log/slog"
 
 	"github.com/remieven/miam/datasource"
 	"github.com/remieven/miam/model"
@@ -42,7 +41,7 @@ func (service *RecipeService) IndexAllExistingRecipes(ctx context.Context) error
 		if err := service.searchDao.IndexRecipe(*recipe); err != nil {
 			return fmt.Errorf("failed to index recipe with id [%s]: %w", id, err)
 		}
-		log.Debug().Str("id", id).Msg("indexed recipe")
+		slog.With("id", id).Debug("indexed recipe")
 	}
 
 	return nil

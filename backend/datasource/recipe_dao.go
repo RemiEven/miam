@@ -5,9 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strings"
-
-	"github.com/rs/zerolog/log"
 
 	"github.com/remieven/miam/model"
 	"github.com/remieven/miam/pb-lite/failure"
@@ -324,7 +323,7 @@ func (dao *RecipeDao) getRecipeCount(ctx context.Context) (int, error) {
 
 func rollback(transaction *sql.Tx) {
 	if err := transaction.Rollback(); err != nil {
-		log.Error().Err(err).Msg("")
+		slog.With("error", err).Error("transaction rollback failed")
 	}
 }
 

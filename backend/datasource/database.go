@@ -2,9 +2,9 @@ package datasource
 
 import (
 	"database/sql"
+	"log/slog"
 
 	_ "github.com/mattn/go-sqlite3" // Necessary to load sqlite3 driver
-	"github.com/rs/zerolog/log"
 )
 
 // DatabaseHolder holds a database connection
@@ -23,6 +23,6 @@ func NewDatabaseHolder(dbFilePath string) (*DatabaseHolder, error) {
 
 // Close cleanly closes the connection to the database
 func (holder *DatabaseHolder) Close() error {
-	log.Info().Msg("closing sqlite database connection")
+	slog.Info("closing sqlite database connection")
 	return holder.DB.Close()
 }

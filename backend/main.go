@@ -3,15 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"time"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"github.com/rs/zerolog/pkgerrors"
 
 	"github.com/remieven/miam/datasource"
 	"github.com/remieven/miam/rest"
@@ -22,7 +19,7 @@ const defaultPort = 7040
 
 func main() {
 	for _, err := range startApplication() {
-		log.Error().Err(err).Msg("execution failed")
+		slog.With("error", err).Error("execution failed")
 	}
 }
 
@@ -33,11 +30,11 @@ func startApplication() (errors []error) {
 		}
 	}
 
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.ErrorStackMarshaler = pkgerrors.MarshalStack
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	log.Info().Msg("Starting")
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelDebug,
+	}))
+	slog.SetDefault(logger)
+	slog.Info("Starting")
 
 	databaseHolder, err := datasource.NewDatabaseHolder("./miam.db")
 	if err != nil {
@@ -88,15 +85,16 @@ func startApplication() (errors []error) {
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
 		Handler:      router,
+		ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelWarn),
 	}
 
 	go func() {
-		log.Info().Int("port", port).Msg("will try to start http server")
+		slog.With("port", port).Info("will try to start http server")
 		if err := srv.ListenAndServe(); err != nil {
 			if err == http.ErrServerClosed {
-				log.Info().Msg("closed http server")
+				slog.Info("closed http server")
 			} else {
-				log.Error().Err(err)
+				slog.With("error", err).Error("error during srv.ListenAndServe")
 				os.Exit(1)
 			}
 		}
@@ -113,7 +111,7 @@ func startApplication() (errors []error) {
 
 	srv.Shutdown(shutdownCtx)
 
-	log.Info().Msg("shutting down")
+	slog.Info("shutting down")
 
 	return
 }
