@@ -16,18 +16,6 @@ Then scp eg.
 
 `./miam`
 
-# TODO
-
-- health
-- config
-- gestion d'erreur
-    - mutualisation dans les handlers + utilisation de wrap pour avoir un semblant de stacktrace + messages pas statiques pour les erreurs dans common
-- version via build and -ldflag
-- cross-compiling dans image
-- docker with bare exec
-    - seems difficult since we use cgo. distroless is probably the best here
-- lint
-
 # See what's going on in the database
 
 sqlitebrowser and boltBrowser can be used

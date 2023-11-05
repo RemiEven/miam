@@ -33,7 +33,10 @@ func NewRecipeDao(holder *DatabaseHolder, recipeIngredientDao *RecipeIngredientD
 func (dao *RecipeDao) GetRecipe(ctx context.Context, ID string) (*model.Recipe, error) {
 	oid, err := toSqliteID(ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert [%s] to sqlite ID: %w", ID, err)
+		return nil, &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", ID),
+			Cause:   err,
+		}
 	}
 	row := dao.holder.DB.QueryRowContext(ctx, "select name, how_to from recipe where id=?", oid)
 	var name, howTo string
@@ -70,7 +73,10 @@ func (dao *RecipeDao) GetRecipes(ctx context.Context, IDs []string) ([]model.Rec
 	var err error
 	for i := range IDs {
 		if queryParams[i], err = toSqliteID(IDs[i]); err != nil {
-			return nil, fmt.Errorf("failed to convert [%s] to sqlite ID: %w", IDs[i], err)
+			return nil, &failure.InvalidValueError{
+				Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", IDs[i]),
+				Cause:   err,
+			}
 		}
 	}
 	rows, err := dao.holder.DB.QueryContext(ctx, "select id, name, how_to from recipe where id in ("+queryParamPlaceholders+")", queryParams...)
@@ -150,7 +156,10 @@ func (dao *RecipeDao) AddRecipe(ctx context.Context, recipe *model.BaseRecipe) (
 func (dao *RecipeDao) DeleteRecipe(ctx context.Context, ID string) error {
 	oid, err := toSqliteID(ID)
 	if err != nil {
-		return fmt.Errorf("failed to convert [%s] to sqlite ID: %w", ID, err)
+		return &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", ID),
+			Cause:   err,
+		}
 	}
 	transaction, err := dao.holder.DB.Begin()
 	if err != nil {

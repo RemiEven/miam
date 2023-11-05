@@ -29,7 +29,10 @@ func NewIngredientDao(holder *DatabaseHolder) (*IngredientDao, error) {
 func (dao *IngredientDao) GetIngredient(ctx context.Context, ID string) (*model.Ingredient, error) {
 	oid, err := toSqliteID(ID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert [%s] to sqlite ID: %w", ID, err)
+		return nil, &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", ID),
+			Cause:   err,
+		}
 	}
 	row := dao.holder.DB.QueryRowContext(ctx, "select name from ingredient where id=?", oid)
 	var name string
@@ -75,7 +78,10 @@ func (dao *IngredientDao) AddIngredient(ctx context.Context, transaction *sql.Tx
 func (dao *IngredientDao) DeleteIngredient(ctx context.Context, ID string) error {
 	oid, err := toSqliteID(ID)
 	if err != nil {
-		return fmt.Errorf("failed to convert [%s] to sqlite ID: %w", ID, err)
+		return &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", ID),
+			Cause:   err,
+		}
 	}
 	deleteStatement, err := dao.holder.DB.PrepareContext(ctx, "delete from ingredient where id=?")
 	if err != nil {

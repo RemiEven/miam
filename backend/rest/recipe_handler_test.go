@@ -9,35 +9,71 @@ import (
 	"testing"
 
 	"github.com/remieven/miam/datasource"
+	"github.com/remieven/miam/pb-lite/failure"
 	"github.com/remieven/miam/pb-lite/fixture"
 	"github.com/remieven/miam/pb-lite/testutils"
 	"github.com/remieven/miam/service"
 )
 
-func TestGetIngredients(t *testing.T) {
+func TestGetRecipe(t *testing.T) {
 	tests := map[string]struct {
 		prepareDatabase  func(*datasource.DatabaseHolder) error
+		recipeId         string
 		expectedStatus   int
 		responseBodyTest func(string) (string, bool)
 	}{
-		"no ingredients": {
-			expectedStatus:   http.StatusOK,
-			responseBodyTest: testutils.JsonResponseBodyTest(`[]`),
+		"recipe not found": {
+			recipeId:         "1",
+			expectedStatus:   http.StatusNotFound,
+			responseBodyTest: testutils.ErrorResponseBodyTest(failure.ResourceNotFoundErrorCode),
 		},
-		"one ingredient": {
-			prepareDatabase:  fixture.PrepareDatabase(`insert into ingredient(name) values("salade verte")`),
-			expectedStatus:   http.StatusOK,
-			responseBodyTest: testutils.JsonResponseBodyTest(`[{"name":"salade verte","id":"1"}]`),
+		"invalid ID": {
+			recipeId:         "not_a_valid_id",
+			expectedStatus:   http.StatusBadRequest,
+			responseBodyTest: testutils.ErrorResponseBodyTest(failure.InvalidArgumentErrorCode),
 		},
-		"several ingredients": {
+		"nominal case": {
 			prepareDatabase: fixture.PrepareDatabase(
 				`insert into ingredient(id, name) values
-					(1, "salade verte"),
-					(2, "oignon rouge")
+					(1, "riz"),
+					(2, "haricots rouges"),
+					(3, "purée de piment"),
+					(4, "émincés de soja")
+				`,
+				`insert into recipe(id, name, how_to) values (1, "riz aux haricots rouges", "just prepare it")`,
+				`insert into recipe_ingredient (recipe_id, ingredient_id, quantity) values
+					(1, 1, ""),
+					(1, 2, ""),
+					(1, 3, "not too much"),
+					(1, 4, "")
 				`,
 			),
-			expectedStatus:   http.StatusOK,
-			responseBodyTest: testutils.JsonResponseBodyTest(`[{"name":"salade verte","id":"1"},{"name":"oignon rouge","id":"2"}]`),
+			recipeId:       "1",
+			expectedStatus: http.StatusOK,
+			responseBodyTest: testutils.JsonResponseBodyTest(`{
+				"id": "1",
+				"name": "riz aux haricots rouges",
+				"howTo": "just prepare it",
+				"ingredients": [
+					{
+						"id": "1",
+						"name": "riz"
+					},
+					{
+						"id": "2",
+						"name": "haricots rouges"
+					},
+					{
+						"id": "3",
+						"name": "purée de piment",
+						"quantity": "not too much"
+					},
+					{
+						"id": "4",
+						"name": "émincés de soja"
+					}
+				]
+			}`),
 		},
 	}
 
@@ -102,7 +138,7 @@ func TestGetIngredients(t *testing.T) {
 
 			router := CreateRouter(recipeService, ingredientService)
 
-			request, err := http.NewRequest(http.MethodGet, "/ingredient", nil)
+			request, err := http.NewRequest(http.MethodGet, "/recipe/"+test.recipeId, nil)
 			if err != nil {
 				t.Error(err)
 				return

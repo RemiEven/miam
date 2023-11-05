@@ -32,7 +32,10 @@ func NewRecipeIngredientDao(holder *DatabaseHolder, ingredientDao *IngredientDao
 func (dao *RecipeIngredientDao) GetRecipeIngredients(ctx context.Context, recipeID string) ([]model.RecipeIngredient, error) {
 	intRecipeID, err := toSqliteID(recipeID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to convert [%s] to sqlite ID: %w", recipeID, err)
+		return nil, &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", recipeID),
+			Cause:   err,
+		}
 	}
 	rows, err := dao.holder.DB.QueryContext(ctx, `select
 		recipe_ingredient.ingredient_id, recipe_ingredient.quantity, ingredient.name
@@ -81,11 +84,17 @@ func (dao *RecipeIngredientDao) AddRecipeIngredient(ctx context.Context, transac
 	}
 	intRecipeID, err := toSqliteID(recipeID)
 	if err != nil {
-		return "", fmt.Errorf("failed to convert [%s] to sqlite ID: %w", recipeID, err)
+		return "", &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", recipeID),
+			Cause:   err,
+		}
 	}
 	intIngredientID, err := toSqliteID(recipeIngredient.ID)
 	if err != nil {
-		return "", fmt.Errorf("failed to convert [%s] to sqlite ID: %w", recipeIngredient.ID, err)
+		return "", &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", recipeIngredient.ID),
+			Cause:   err,
+		}
 	}
 
 	insertStatement, err := transaction.PrepareContext(ctx, "insert into recipe_ingredient(recipe_id, ingredient_id, quantity) values(?, ?, ?)")
@@ -105,7 +114,10 @@ func (dao *RecipeIngredientDao) AddRecipeIngredient(ctx context.Context, transac
 func (dao *RecipeIngredientDao) IsUsedInRecipe(ctx context.Context, ingredientID string) (bool, error) {
 	intID, err := toSqliteID(ingredientID)
 	if err != nil {
-		return false, fmt.Errorf("failed to convert [%s] to sqlite ID: %w", ingredientID, err)
+		return false, &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", ingredientID),
+			Cause:   err,
+		}
 	}
 	row := dao.holder.DB.QueryRowContext(ctx, "select exists(select 1 from recipe_ingredient where ingredient_id=?)", intID)
 	var exists bool
@@ -119,7 +131,10 @@ func (dao *RecipeIngredientDao) IsUsedInRecipe(ctx context.Context, ingredientID
 func (dao *RecipeIngredientDao) DeleteRecipeIngredients(ctx context.Context, transaction *sql.Tx, recipeID string) error {
 	intID, err := toSqliteID(recipeID)
 	if err != nil {
-		return fmt.Errorf("failed to convert [%s] to sqlite ID: %w", recipeID, err)
+		return &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", recipeID),
+			Cause:   err,
+		}
 	}
 	deleteStatement, err := transaction.PrepareContext(ctx, "delete from recipe_ingredient where recipe_id=?")
 	if err != nil {
@@ -137,11 +152,17 @@ func (dao *RecipeIngredientDao) DeleteRecipeIngredients(ctx context.Context, tra
 func (dao *RecipeIngredientDao) DeleteRecipeIngredient(ctx context.Context, transaction *sql.Tx, recipeID, ingredientID string) error {
 	intRecipeID, err := toSqliteID(recipeID)
 	if err != nil {
-		return fmt.Errorf("failed to convert [%s] to sqlite ID: %w", recipeID, err)
+		return &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", recipeID),
+			Cause:   err,
+		}
 	}
 	intIngredientID, err := toSqliteID(ingredientID)
 	if err != nil {
-		return fmt.Errorf("failed to convert [%s] to sqlite ID: %w", ingredientID, err)
+		return &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", ingredientID),
+			Cause:   err,
+		}
 	}
 	deleteStatement, err := transaction.PrepareContext(ctx, "delete from recipe_ingredient where recipe_id=? and ingredient_id=?")
 	if err != nil {
@@ -159,7 +180,10 @@ func (dao *RecipeIngredientDao) DeleteRecipeIngredient(ctx context.Context, tran
 func (dao *RecipeIngredientDao) UpdateRecipeIngredient(ctx context.Context, transaction *sql.Tx, recipeID string, recipeIngredient model.RecipeIngredient) error {
 	intID, err := toSqliteID(recipeID)
 	if err != nil {
-		return fmt.Errorf("failed to convert [%s] to sqlite ID: %w", recipeID, err)
+		return &failure.InvalidValueError{
+			Message: fmt.Sprintf("failed to convert [%s] to sqlite ID", recipeID),
+			Cause:   err,
+		}
 	}
 	updateStatement, err := transaction.PrepareContext(ctx, "update recipe_ingredient set quantity=?3 where recipe_id=?1 and ingredient_id=?2")
 	if err != nil {
